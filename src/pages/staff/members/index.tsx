@@ -264,33 +264,39 @@ export function MembersPage() {
                 className="h-9 cursor-text rounded-md pl-8 text-sm"
               />
             </div>
-            <Combobox
-              value={statusFilter}
-              onValueChange={(value) => value && updateSearchParams({ status: value })}
-            >
-              <ComboboxInput placeholder="Status" className="h-9 w-[180px] cursor-pointer" />
-              <ComboboxContent>
-                <ComboboxList>
-                  <ComboboxItem value="all" className="cursor-pointer">All Status</ComboboxItem>
-                  <ComboboxItem value="active" className="cursor-pointer">Active</ComboboxItem>
-                  <ComboboxItem value="payment_overdue" className="cursor-pointer">Payment Overdue</ComboboxItem>
-                  <ComboboxItem value="cancelled" className="cursor-pointer">Cancelled</ComboboxItem>
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
-            <Combobox
-              value={planFilter}
-              onValueChange={(value) => value && updateSearchParams({ plan: value })}
-            >
-              <ComboboxInput placeholder="Plan" className="h-9 w-[180px] cursor-pointer" />
-              <ComboboxContent>
-                <ComboboxList>
-                  <ComboboxItem value="all" className="cursor-pointer">All Plans</ComboboxItem>
-                  <ComboboxItem value="monthly" className="cursor-pointer">Monthly</ComboboxItem>
-                  <ComboboxItem value="annual" className="cursor-pointer">Annual</ComboboxItem>
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Status:</span>
+              <Combobox
+                value={statusFilter}
+                onValueChange={(value) => value && updateSearchParams({ status: value })}
+              >
+                <ComboboxInput placeholder="All" className="h-9 w-[140px] cursor-pointer" />
+                <ComboboxContent>
+                  <ComboboxList>
+                    <ComboboxItem value="all" className="cursor-pointer">All Status</ComboboxItem>
+                    <ComboboxItem value="active" className="cursor-pointer">Active</ComboboxItem>
+                    <ComboboxItem value="payment_overdue" className="cursor-pointer">Payment Overdue</ComboboxItem>
+                    <ComboboxItem value="cancelled" className="cursor-pointer">Cancelled</ComboboxItem>
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Plan:</span>
+              <Combobox
+                value={planFilter}
+                onValueChange={(value) => value && updateSearchParams({ plan: value })}
+              >
+                <ComboboxInput placeholder="All" className="h-9 w-[140px] cursor-pointer" />
+                <ComboboxContent>
+                  <ComboboxList>
+                    <ComboboxItem value="all" className="cursor-pointer">All Plans</ComboboxItem>
+                    <ComboboxItem value="monthly" className="cursor-pointer">Monthly</ComboboxItem>
+                    <ComboboxItem value="annual" className="cursor-pointer">Annual</ComboboxItem>
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Pages:</span>
               <Combobox

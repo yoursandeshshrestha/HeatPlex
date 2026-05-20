@@ -271,33 +271,39 @@ export function StaffPage() {
                 className="h-9 cursor-text rounded-md pl-8 text-sm"
               />
             </div>
-            <Combobox
-              value={roleFilter}
-              onValueChange={(value) => value && updateSearchParams({ role: value })}
-            >
-              <ComboboxInput placeholder="Role" className="h-9 w-[180px] cursor-pointer" />
-              <ComboboxContent>
-                <ComboboxList>
-                  <ComboboxItem value="all" className="cursor-pointer">All Roles</ComboboxItem>
-                  <ComboboxItem value="owner" className="cursor-pointer">Owner</ComboboxItem>
-                  <ComboboxItem value="admin" className="cursor-pointer">Admin</ComboboxItem>
-                  <ComboboxItem value="staff" className="cursor-pointer">Staff</ComboboxItem>
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
-            <Combobox
-              value={statusFilter}
-              onValueChange={(value) => value && updateSearchParams({ status: value })}
-            >
-              <ComboboxInput placeholder="Status" className="h-9 w-[180px] cursor-pointer" />
-              <ComboboxContent>
-                <ComboboxList>
-                  <ComboboxItem value="all" className="cursor-pointer">All Status</ComboboxItem>
-                  <ComboboxItem value="active" className="cursor-pointer">Active</ComboboxItem>
-                  <ComboboxItem value="inactive" className="cursor-pointer">Inactive</ComboboxItem>
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Role:</span>
+              <Combobox
+                value={roleFilter}
+                onValueChange={(value) => value && updateSearchParams({ role: value })}
+              >
+                <ComboboxInput placeholder="All" className="h-9 w-[140px] cursor-pointer" />
+                <ComboboxContent>
+                  <ComboboxList>
+                    <ComboboxItem value="all" className="cursor-pointer">All Roles</ComboboxItem>
+                    <ComboboxItem value="owner" className="cursor-pointer">Owner</ComboboxItem>
+                    <ComboboxItem value="admin" className="cursor-pointer">Admin</ComboboxItem>
+                    <ComboboxItem value="staff" className="cursor-pointer">Staff</ComboboxItem>
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Status:</span>
+              <Combobox
+                value={statusFilter}
+                onValueChange={(value) => value && updateSearchParams({ status: value })}
+              >
+                <ComboboxInput placeholder="All" className="h-9 w-[140px] cursor-pointer" />
+                <ComboboxContent>
+                  <ComboboxList>
+                    <ComboboxItem value="all" className="cursor-pointer">All Status</ComboboxItem>
+                    <ComboboxItem value="active" className="cursor-pointer">Active</ComboboxItem>
+                    <ComboboxItem value="inactive" className="cursor-pointer">Inactive</ComboboxItem>
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Pages:</span>
               <Combobox
