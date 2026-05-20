@@ -7,7 +7,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 import { LoadingScreen } from '@/components/ui/loading-screen';
@@ -76,36 +75,37 @@ export function LoginPage() {
           </div>
 
           <div className="flex-1 flex items-center justify-center">
-            <Card className="w-full max-w-md border-0 shadow-none">
-              <CardHeader>
-                <CardTitle>Check your email</CardTitle>
-            <CardDescription>
-              We've sent a login link to {maskedEmail}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert>
-              <AlertDescription>
-                Your login link expires in 15 minutes.
-              </AlertDescription>
-            </Alert>
+            <div className="w-full max-w-md space-y-8">
+              <div className="space-y-2 text-center">
+                <h1 className="text-3xl font-semibold tracking-tight">Check your email</h1>
+                <p className="text-muted-foreground">
+                  We've sent a login link to {maskedEmail}
+                </p>
+              </div>
 
-            <Button
-              variant="outline"
-              onClick={() => setSent(false)}
-              className="w-full cursor-pointer"
-            >
-              Send another link
-            </Button>
+              <div className="space-y-4">
+                <Alert>
+                  <AlertDescription>
+                    Your login link expires in 15 minutes.
+                  </AlertDescription>
+                </Alert>
 
-            <div className="text-center text-sm text-muted-foreground">
-              <p>New here?</p>
-              <a href="/join/plan" className="text-primary hover:underline cursor-pointer">
-                Join Heat Plex Membership →
-              </a>
+                <Button
+                  variant="outline"
+                  onClick={() => setSent(false)}
+                  className="w-full cursor-pointer"
+                >
+                  Send another link
+                </Button>
+
+                <div className="text-center text-sm text-muted-foreground space-y-1">
+                  <p>New here?</p>
+                  <a href="/join/plan" className="text-primary hover:underline cursor-pointer">
+                    Join Heat Plex Membership →
+                  </a>
+                </div>
+              </div>
             </div>
-          </CardContent>
-            </Card>
           </div>
         </div>
 
@@ -131,75 +131,74 @@ export function LoginPage() {
         </div>
 
         <div className="flex-1 flex items-center justify-center">
-          <Card className="w-full max-w-md border-0 shadow-none">
-            <CardHeader className="text-center">
-              <CardTitle>Welcome back</CardTitle>
-          <CardDescription>
-            Enter your email and we'll send you a one-tap login link
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Input
-                type="email"
-                placeholder="your.email@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-                className="cursor-pointer"
-              />
-            </div>
-
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full cursor-pointer"
-              disabled={loading || !email}
-            >
-              {loading ? (
-                <>
-                  <Spinner className="mr-2 h-4 w-4" />
-                  Sending...
-                </>
-              ) : (
-                'Send login link'
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-6 border-t pt-6">
-            <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                <strong>New here?</strong> Heat Plex Membership covers your annual service + 20% off all works.
+          <div className="w-full max-w-md space-y-8">
+            <div className="space-y-2 text-center">
+              <h1 className="text-3xl font-semibold tracking-tight">Welcome back</h1>
+              <p className="text-muted-foreground">
+                Enter your email and we'll send you a one-tap login link
               </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Input
+                  type="email"
+                  placeholder="youremail@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                  className="cursor-text"
+                />
+              </div>
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
               <Button
-                variant="outline"
+                type="submit"
                 className="w-full cursor-pointer"
-                onClick={() => (window.location.href = '/join/plan')}
+                disabled={loading || !email}
               >
-                Join now from £199/year →
+                {loading ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    Sending...
+                  </>
+                ) : (
+                  'Send login link'
+                )}
               </Button>
+            </form>
+
+            <div className="border-t pt-6 space-y-4">
+              <div className="text-center space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  <strong>New here?</strong> Heat Plex Membership covers your annual service + 20% off all works.
+                </p>
+                <Button
+                  variant="outline"
+                  className="w-full cursor-pointer"
+                  onClick={() => (window.location.href = '/join/plan')}
+                >
+                  Join now from £199/year →
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex justify-center gap-4 text-sm text-muted-foreground">
+              <a href="https://heatplex.com/membership" className="hover:underline cursor-pointer">
+                What's included?
+              </a>
+              <span>·</span>
+              <a href="mailto:contact@heatplex.com" className="hover:underline cursor-pointer">
+                Contact us
+              </a>
             </div>
           </div>
-
-          <div className="mt-6 flex justify-center gap-4 text-sm text-muted-foreground">
-            <a href="https://heatplex.com/membership" className="hover:underline cursor-pointer">
-              What's included?
-            </a>
-            <span>·</span>
-            <a href="mailto:contact@heatplex.com" className="hover:underline cursor-pointer">
-              Contact us
-            </a>
-          </div>
-        </CardContent>
-          </Card>
         </div>
       </div>
 
