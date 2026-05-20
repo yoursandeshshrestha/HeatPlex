@@ -97,8 +97,11 @@ export function MembersPage() {
   const planFilter = searchParams.get('plan') || 'all';
 
   useEffect(() => {
-    loadMembers();
     loadStats();
+  }, []);
+
+  useEffect(() => {
+    loadMembers();
   }, [page, limit, search, statusFilter, planFilter]);
 
   async function loadMembers() {

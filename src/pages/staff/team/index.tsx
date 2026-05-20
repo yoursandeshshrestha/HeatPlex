@@ -97,8 +97,11 @@ export function StaffPage() {
   const statusFilter = searchParams.get('status') || 'all';
 
   useEffect(() => {
-    loadStaff();
     loadStats();
+  }, []);
+
+  useEffect(() => {
+    loadStaff();
   }, [page, limit, search, roleFilter, statusFilter]);
 
   async function loadStaff() {
