@@ -26,14 +26,14 @@ export function RevenueBreakdown() {
   })
 
   return (
-    <Card className="flex h-full flex-col">
+    <Card className="flex h-full flex-col p-0">
       <div className="flex items-center justify-between border-b p-4">
         <div className="flex items-center gap-2">
           <div className="text-sm font-medium">Revenue Breakdown</div>
           <DollarSign className="size-4 text-muted-foreground" />
         </div>
       </div>
-      <div className="flex-1">
+      <div className="flex-1 pt-4">
         <div className="flex items-center justify-between px-4">
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Revenue by Category</h3>

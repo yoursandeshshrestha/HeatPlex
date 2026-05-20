@@ -24,14 +24,14 @@ export function SalesTrend() {
   const [activeTab, setActiveTab] = useState('Monthly')
 
   return (
-    <Card className="flex h-full flex-col">
+    <Card className="flex h-full flex-col p-0">
       <div className="flex items-center justify-between border-b p-4">
         <div className="flex items-center gap-2">
           <div className="text-sm font-medium">Sales Trend</div>
           <TrendingUp className="size-4 text-muted-foreground" />
         </div>
       </div>
-      <div className="flex-1">
+      <div className="flex-1 pt-4">
         <div className="flex items-center justify-between px-4">
           <div className="flex items-center gap-4">
             <h3 className="text-base font-medium text-muted-foreground">

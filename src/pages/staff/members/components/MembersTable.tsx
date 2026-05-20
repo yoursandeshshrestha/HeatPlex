@@ -75,7 +75,7 @@ export function MembersTable({ members, totalCount, loading }: MembersTableProps
   };
 
   return (
-    <Card>
+    <Card className="p-0">
       <div className="space-y-4 border-b p-4">
         <div className="flex items-center justify-between">
           <div className="text-sm font-medium">

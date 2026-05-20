@@ -78,7 +78,7 @@ const statusStyles = {
 
 export function RecentTransactions() {
   return (
-    <Card>
+    <Card className="p-0">
       <div className="flex items-center justify-between border-b p-4">
         <div className="text-sm font-medium">
           Recent Transactions
