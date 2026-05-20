@@ -8,6 +8,11 @@ import { StaffPage } from '@/pages/staff/team';
 import { MemberDashboardPage } from '@/pages/members/DashboardPage';
 import { LoginPage } from '@/pages/common/auth/LoginPage';
 import { VerifyPage } from '@/pages/common/auth/VerifyPage';
+import { SignupPlanPage } from '@/pages/common/signup/plan';
+import { SignupDetailsPage } from '@/pages/common/signup/details';
+import { SignupConfirmMatchPage } from '@/pages/common/signup/confirm-match';
+import { SignupPaymentPage } from '@/pages/common/signup/payment';
+import { SignupDonePage } from '@/pages/common/signup/done';
 import { LoadingScreen } from '@/components/ui/loading-screen';
 
 // Protected route wrapper
@@ -56,6 +61,13 @@ function AppRoutes() {
       {/* Public routes */}
       <Route path="/" element={<LoginPage />} />
       <Route path="/login/verify" element={<VerifyPage />} />
+
+      {/* Signup wizard routes */}
+      <Route path="/join/plan" element={<SignupPlanPage />} />
+      <Route path="/join/details" element={<SignupDetailsPage />} />
+      <Route path="/join/confirm-match" element={<SignupConfirmMatchPage />} />
+      <Route path="/join/payment" element={<SignupPaymentPage />} />
+      <Route path="/join/done" element={<SignupDonePage />} />
 
       {/* Auto-redirect to correct dashboard */}
       <Route path="/account" element={<DashboardRedirect />} />
