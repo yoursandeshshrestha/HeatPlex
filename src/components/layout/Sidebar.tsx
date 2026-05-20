@@ -14,6 +14,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 
 interface SidebarProps {
   isCollapsed?: boolean
@@ -21,6 +23,21 @@ interface SidebarProps {
 
 export function Sidebar({ isCollapsed = false }: SidebarProps) {
   const [activeItem, setActiveItem] = useState('/admin')
+  const { signOut } = useAuth()
+
+  async function handleSignOut() {
+    try {
+      await signOut()
+
+      // Verify session is cleared before redirecting
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        window.location.href = '/'
+      }
+    } catch (error) {
+      console.error('Sign out error:', error)
+    }
+  }
 
   return (
     <aside className={`flex h-screen flex-col border-r border-border bg-sidebar text-sidebar-foreground transition-all duration-300 ${
@@ -33,10 +50,10 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
         }`}>
           {/* Logo Image */}
           <img
-            src="/D.png"
-            alt="Logo"
+            src="/heatplex-logo.png"
+            alt="Heat Plex"
             className={`object-contain transition-all ${
-              isCollapsed ? 'h-10 max-w-[80%]' : 'h-12 max-w-full'
+              isCollapsed ? 'h-8 max-w-[80%]' : 'h-10 max-w-full'
             }`}
           />
         </div>
@@ -239,7 +256,7 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
+            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
               <svg
                 className="mr-2 size-4"
                 fill="none"
