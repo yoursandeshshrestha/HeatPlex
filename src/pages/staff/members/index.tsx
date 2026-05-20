@@ -4,12 +4,21 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import type { Tables } from '@/lib/supabase';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxContent,
+  ComboboxList,
+  ComboboxItem,
+  ComboboxEmpty,
+} from '@/components/ui/combobox';
 import {
   Table,
   TableBody,
@@ -18,7 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Search, Download, Users, UserCheck, AlertCircle, Calendar } from 'lucide-react';
+import { Search, Download, Users, UserCheck, AlertCircle, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDate } from '@/lib/date-utils';
 import { Area, AreaChart } from 'recharts';
 
@@ -70,23 +79,59 @@ function StatCard({ title, value, change, icon, data }: StatCardProps) {
 }
 
 export function MembersPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [members, setMembers] = useState<Member[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    paymentOverdue: 0,
+    annual: 0,
+  });
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+
+  const page = parseInt(searchParams.get('page') || '1');
+  const limit = parseInt(searchParams.get('limit') || '10');
+  const search = searchParams.get('search') || '';
+  const statusFilter = searchParams.get('status') || 'all';
+  const planFilter = searchParams.get('plan') || 'all';
 
   useEffect(() => {
     loadMembers();
-  }, []);
+    loadStats();
+  }, [page, limit, search, statusFilter, planFilter]);
 
   async function loadMembers() {
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      let query = supabase
         .from('members')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
+
+      // Search
+      if (search) {
+        query = query.or(`email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`);
+      }
+
+      // Filters
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+      if (planFilter !== 'all') {
+        query = query.eq('plan', planFilter);
+      }
+
+      // Pagination
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
 
       if (error) throw error;
       setMembers(data || []);
+      setTotalCount(count || 0);
     } catch (error) {
       console.error('Error loading members:', error);
     } finally {
@@ -94,12 +139,45 @@ export function MembersPage() {
     }
   }
 
-  const filteredMembers = members.filter(
-    (member) =>
-      member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.last_name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  async function loadStats() {
+    try {
+      const { data, error } = await supabase
+        .from('members')
+        .select('status, plan');
+
+      if (error) throw error;
+
+      const allMembers = data || [];
+      setStats({
+        total: allMembers.length,
+        active: allMembers.filter((m) => m.status === 'active').length,
+        paymentOverdue: allMembers.filter((m) => m.status === 'payment_overdue').length,
+        annual: allMembers.filter((m) => m.plan === 'annual').length,
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  }
+
+  function updateSearchParams(updates: Record<string, string>) {
+    const newParams = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        newParams.set(key, value);
+      } else {
+        newParams.delete(key);
+      }
+    });
+    // Reset to page 1 when filters change
+    if (updates.search !== undefined || updates.status !== undefined || updates.plan !== undefined) {
+      newParams.set('page', '1');
+    }
+    setSearchParams(newParams);
+  }
+
+  const totalPages = Math.ceil(totalCount / limit);
+  const hasNextPage = page < totalPages;
+  const hasPrevPage = page > 1;
 
   const statusStyles = {
     active: 'bg-emerald-500/10 text-emerald-400 backdrop-blur-sm hover:bg-emerald-500/15',
@@ -135,28 +213,28 @@ export function MembersPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Members"
-          value={members.length}
+          value={stats.total}
           change={12.5}
           icon={<Users className="size-4" />}
           data={[30, 35, 40, 38, 45, 50, 55]}
         />
         <StatCard
           title="Active"
-          value={members.filter((m) => m.status === 'active').length}
+          value={stats.active}
           change={8.2}
           icon={<UserCheck className="size-4" />}
           data={[25, 28, 30, 32, 35, 38, 40]}
         />
         <StatCard
           title="Payment Overdue"
-          value={members.filter((m) => m.status === 'payment_overdue').length}
+          value={stats.paymentOverdue}
           change={-15.3}
           icon={<AlertCircle className="size-4" />}
           data={[20, 18, 15, 12, 10, 8, 5]}
         />
         <StatCard
           title="Annual Plans"
-          value={members.filter((m) => m.plan === 'annual').length}
+          value={stats.annual}
           change={18.7}
           icon={<Calendar className="size-4" />}
           data={[15, 20, 22, 28, 30, 35, 38]}
@@ -165,19 +243,68 @@ export function MembersPage() {
 
       {/* Table */}
       <Card>
-        <div className="flex items-center justify-between border-b p-4">
-          <div className="text-sm font-medium">
-            All Members
+        <div className="space-y-4 border-b p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium">
+              All Members ({totalCount})
+            </div>
+            <Button className="cursor-pointer">
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
           </div>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search members..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9 w-[240px] cursor-text rounded-md pl-8 text-sm"
-            />
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search members..."
+                value={search}
+                onChange={(e) => updateSearchParams({ search: e.target.value })}
+                className="h-9 cursor-text rounded-md pl-8 text-sm"
+              />
+            </div>
+            <Combobox
+              value={statusFilter}
+              onValueChange={(value) => value && updateSearchParams({ status: value })}
+            >
+              <ComboboxInput placeholder="Status" className="h-9 w-[160px] cursor-pointer" />
+              <ComboboxContent>
+                <ComboboxList>
+                  <ComboboxItem value="all" className="cursor-pointer">All Status</ComboboxItem>
+                  <ComboboxItem value="active" className="cursor-pointer">Active</ComboboxItem>
+                  <ComboboxItem value="payment_overdue" className="cursor-pointer">Payment Overdue</ComboboxItem>
+                  <ComboboxItem value="cancelled" className="cursor-pointer">Cancelled</ComboboxItem>
+                </ComboboxList>
+              </ComboboxContent>
+            </Combobox>
+            <Combobox
+              value={planFilter}
+              onValueChange={(value) => value && updateSearchParams({ plan: value })}
+            >
+              <ComboboxInput placeholder="Plan" className="h-9 w-[160px] cursor-pointer" />
+              <ComboboxContent>
+                <ComboboxList>
+                  <ComboboxItem value="all" className="cursor-pointer">All Plans</ComboboxItem>
+                  <ComboboxItem value="monthly" className="cursor-pointer">Monthly</ComboboxItem>
+                  <ComboboxItem value="annual" className="cursor-pointer">Annual</ComboboxItem>
+                </ComboboxList>
+              </ComboboxContent>
+            </Combobox>
+            <Combobox
+              value={limit.toString()}
+              onValueChange={(value) => value && updateSearchParams({ limit: value })}
+            >
+              <ComboboxInput placeholder="Per page" className="h-9 w-[100px] cursor-pointer" />
+              <ComboboxContent>
+                <ComboboxList>
+                  <ComboboxItem value="10" className="cursor-pointer">10 / page</ComboboxItem>
+                  <ComboboxItem value="25" className="cursor-pointer">25 / page</ComboboxItem>
+                  <ComboboxItem value="50" className="cursor-pointer">50 / page</ComboboxItem>
+                  <ComboboxItem value="100" className="cursor-pointer">100 / page</ComboboxItem>
+                </ComboboxList>
+              </ComboboxContent>
+            </Combobox>
           </div>
         </div>
         <div className="overflow-hidden">
@@ -195,14 +322,20 @@ export function MembersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredMembers.length === 0 ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-32 text-center text-sm">
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              ) : members.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="h-32 text-center text-sm">
                     No members found
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredMembers.map((member) => (
+                members.map((member) => (
                   <TableRow key={member.id} className="cursor-pointer">
                     <TableCell className="font-medium">
                       {member.first_name} {member.last_name}
@@ -239,6 +372,60 @@ export function MembersPage() {
             </TableBody>
           </Table>
         </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t p-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalCount)} of {totalCount} members
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateSearchParams({ page: (page - 1).toString() })}
+                disabled={!hasPrevPage}
+                className="h-8 cursor-pointer"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (page <= 3) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = page - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={pageNum === page ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => updateSearchParams({ page: pageNum.toString() })}
+                      className="h-8 w-8 cursor-pointer p-0"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateSearchParams({ page: (page + 1).toString() })}
+                disabled={!hasNextPage}
+                className="h-8 cursor-pointer"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );
