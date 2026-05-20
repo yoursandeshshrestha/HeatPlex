@@ -1,15 +1,15 @@
 /**
  * Authentication Context
- * Manages member/staff authentication state using custom session system
+ * Manages member/staff authentication using Supabase Auth
  */
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import type { Tables } from '@/lib/supabase';
 
 type Member = Tables<'members'>;
 type Staff = Tables<'staff'>;
-type Session = Tables<'sessions'>;
 
 interface AuthState {
   user: Member | Staff | null;
@@ -33,98 +33,96 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading: true,
   });
 
-  // Load session from sessionStorage on mount
   useEffect(() => {
-    loadSession();
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleSessionChange(session);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      handleSessionChange(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  async function loadSession() {
+  async function handleSessionChange(session: Session | null) {
+    if (!session) {
+      setState({ user: null, userType: null, session: null, loading: false });
+      return;
+    }
+
     try {
-      const sessionId = sessionStorage.getItem('heatplex_session_id');
-      if (!sessionId) {
+      const email = session.user.email;
+      if (!email) {
         setState({ user: null, userType: null, session: null, loading: false });
         return;
       }
 
-      // Fetch session from database
-      const { data: session, error: sessionError } = await supabase
-        .from('sessions')
+      // Check if user is a member
+      const { data: member } = await supabase
+        .from('members')
         .select('*')
-        .eq('id', sessionId)
+        .eq('email', email)
         .single();
 
-      if (sessionError || !session) {
-        sessionStorage.removeItem('heatplex_session_id');
-        setState({ user: null, userType: null, session: null, loading: false });
+      if (member) {
+        setState({
+          user: member,
+          userType: 'member',
+          session,
+          loading: false,
+        });
         return;
       }
 
-      // Check if session expired
-      if (new Date(session.expires_at) < new Date()) {
-        sessionStorage.removeItem('heatplex_session_id');
-        setState({ user: null, userType: null, session: null, loading: false });
+      // Check if user is staff
+      const { data: staff } = await supabase
+        .from('staff')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (staff) {
+        setState({
+          user: staff,
+          userType: 'staff',
+          session,
+          loading: false,
+        });
         return;
       }
 
-      // Fetch user based on owner_type
-      if (session.owner_type === 'member') {
-        const { data: member } = await supabase
-          .from('members')
-          .select('*')
-          .eq('id', session.owner_id)
-          .single();
-
-        if (member) {
-          setState({
-            user: member,
-            userType: 'member',
-            session,
-            loading: false,
-          });
-        } else {
-          setState({ user: null, userType: null, session: null, loading: false });
-        }
-      } else if (session.owner_type === 'staff') {
-        const { data: staff } = await supabase
-          .from('staff')
-          .select('*')
-          .eq('id', session.owner_id)
-          .single();
-
-        if (staff) {
-          setState({
-            user: staff,
-            userType: 'staff',
-            session,
-            loading: false,
-          });
-        } else {
-          setState({ user: null, userType: null, session: null, loading: false });
-        }
-      }
+      // User has Supabase auth but no member/staff profile
+      console.warn('User authenticated but no profile found:', email);
+      await supabase.auth.signOut();
+      setState({ user: null, userType: null, session: null, loading: false });
     } catch (error) {
-      console.error('Error loading session:', error);
+      console.error('Error loading user profile:', error);
       setState({ user: null, userType: null, session: null, loading: false });
     }
   }
 
   async function signOut() {
     try {
-      const sessionId = sessionStorage.getItem('heatplex_session_id');
-      if (sessionId) {
-        // Delete session from database
-        await supabase.from('sessions').delete().eq('id', sessionId);
-      }
+      await supabase.auth.signOut();
+      setState({ user: null, userType: null, session: null, loading: false });
     } catch (error) {
       console.error('Error signing out:', error);
-    } finally {
-      sessionStorage.removeItem('heatplex_session_id');
       setState({ user: null, userType: null, session: null, loading: false });
     }
   }
 
   async function refreshSession() {
-    await loadSession();
+    try {
+      const { data: { session } } = await supabase.auth.refreshSession();
+      await handleSessionChange(session);
+    } catch (error) {
+      console.error('Error refreshing session:', error);
+    }
   }
 
   return (
