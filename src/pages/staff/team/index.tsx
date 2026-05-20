@@ -275,7 +275,7 @@ export function StaffPage() {
               value={roleFilter}
               onValueChange={(value) => value && updateSearchParams({ role: value })}
             >
-              <ComboboxInput placeholder="Role" className="h-9 w-[160px] cursor-pointer" />
+              <ComboboxInput placeholder="Role" className="h-9 w-[160px] cursor-pointer rounded-lg! [&>div]:rounded-lg!" />
               <ComboboxContent>
                 <ComboboxList>
                   <ComboboxItem value="all" className="cursor-pointer">All Roles</ComboboxItem>
@@ -289,7 +289,7 @@ export function StaffPage() {
               value={statusFilter}
               onValueChange={(value) => value && updateSearchParams({ status: value })}
             >
-              <ComboboxInput placeholder="Status" className="h-9 w-[160px] cursor-pointer" />
+              <ComboboxInput placeholder="Status" className="h-9 w-[160px] cursor-pointer rounded-lg! [&>div]:rounded-lg!" />
               <ComboboxContent>
                 <ComboboxList>
                   <ComboboxItem value="all" className="cursor-pointer">All Status</ComboboxItem>
@@ -302,7 +302,7 @@ export function StaffPage() {
               value={limit.toString()}
               onValueChange={(value) => value && updateSearchParams({ limit: value })}
             >
-              <ComboboxInput placeholder="Per page" className="h-9 w-[100px] cursor-pointer" />
+              <ComboboxInput placeholder="Per page" className="h-9 w-[100px] cursor-pointer rounded-lg! [&>div]:rounded-lg!" />
               <ComboboxContent>
                 <ComboboxList>
                   <ComboboxItem value="10" className="cursor-pointer">10 / page</ComboboxItem>

@@ -268,7 +268,7 @@ export function MembersPage() {
               value={statusFilter}
               onValueChange={(value) => value && updateSearchParams({ status: value })}
             >
-              <ComboboxInput placeholder="Status" className="h-9 w-[160px] cursor-pointer" />
+              <ComboboxInput placeholder="Status" className="h-9 w-[160px] cursor-pointer rounded-lg! [&>div]:rounded-lg!" />
               <ComboboxContent>
                 <ComboboxList>
                   <ComboboxItem value="all" className="cursor-pointer">All Status</ComboboxItem>
@@ -282,7 +282,7 @@ export function MembersPage() {
               value={planFilter}
               onValueChange={(value) => value && updateSearchParams({ plan: value })}
             >
-              <ComboboxInput placeholder="Plan" className="h-9 w-[160px] cursor-pointer" />
+              <ComboboxInput placeholder="Plan" className="h-9 w-[160px] cursor-pointer !rounded-lg [&>div]:!rounded-lg" />
               <ComboboxContent>
                 <ComboboxList>
                   <ComboboxItem value="all" className="cursor-pointer">All Plans</ComboboxItem>
@@ -295,7 +295,7 @@ export function MembersPage() {
               value={limit.toString()}
               onValueChange={(value) => value && updateSearchParams({ limit: value })}
             >
-              <ComboboxInput placeholder="Per page" className="h-9 w-[100px] cursor-pointer" />
+              <ComboboxInput placeholder="Per page" className="h-9 w-[100px] cursor-pointer !rounded-lg [&>div]:!rounded-lg" />
               <ComboboxContent>
                 <ComboboxList>
                   <ComboboxItem value="10" className="cursor-pointer">10 / page</ComboboxItem>
