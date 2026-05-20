@@ -78,9 +78,9 @@ const statusStyles = {
 
 export function RecentTransactions() {
   return (
-    <div className="rounded-xl border bg-muted/30 pb-1.5 pl-1.5 pr-1.5 pt-3">
-      <div className="mb-2 flex items-center justify-between px-1">
-        <div className="text-[13px] font-medium text-muted-foreground/60">
+    <Card>
+      <div className="flex items-center justify-between border-b p-4">
+        <div className="text-sm font-medium">
           Recent Transactions
         </div>
         <div className="flex items-center gap-2">
@@ -89,54 +89,53 @@ export function RecentTransactions() {
             <Input
               type="search"
               placeholder="Search transactions..."
-              className="h-9 w-[200px] cursor-text rounded-md pl-8 text-[13px]"
+              className="h-9 w-[200px] cursor-text rounded-md pl-8 text-sm"
             />
           </div>
           <Button variant="outline" size="sm" className="h-9 cursor-pointer">
             <Plus className="mr-1.5 size-4" />
             Add Transaction
           </Button>
-         
         </div>
       </div>
-      <Card className="rounded-lg border py-0 ring-0">
+      <div className="overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="pl-6 text-[13px] font-medium">Transaction ID</TableHead>
-              <TableHead className="text-[13px] font-medium">Customer</TableHead>
-              <TableHead className="text-[13px] font-medium">Email</TableHead>
-              <TableHead className="text-[13px] font-medium">Amount</TableHead>
-              <TableHead className="text-[13px] font-medium">Status</TableHead>
-              <TableHead className="text-[13px] font-medium">Date</TableHead>
-              <TableHead className="pr-6 text-[13px] font-medium">Time</TableHead>
+            <TableRow className="border-b hover:bg-transparent">
+              <TableHead className="px-6 font-semibold">Transaction ID</TableHead>
+              <TableHead className="font-semibold">Customer</TableHead>
+              <TableHead className="font-semibold">Email</TableHead>
+              <TableHead className="font-semibold">Amount</TableHead>
+              <TableHead className="font-semibold">Status</TableHead>
+              <TableHead className="font-semibold">Date</TableHead>
+              <TableHead className="px-6 font-semibold">Time</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {transactions.map((transaction) => (
-              <TableRow key={transaction.id} className="cursor-pointer">
-                <TableCell className="pl-6 text-[13px] font-medium">{transaction.id}</TableCell>
-                <TableCell className="text-[13px]">{transaction.customer}</TableCell>
-                <TableCell className="text-[13px] text-muted-foreground">
+              <TableRow key={transaction.id} className="cursor-pointer border-b transition-colors hover:bg-muted/50">
+                <TableCell className="px-6 py-4 font-medium">{transaction.id}</TableCell>
+                <TableCell className="py-4">{transaction.customer}</TableCell>
+                <TableCell className="py-4 text-muted-foreground">
                   {transaction.email}
                 </TableCell>
-                <TableCell className="text-[13px] font-medium">{transaction.amount}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary" className={`text-[11px] ${statusStyles[transaction.status]}`}>
+                <TableCell className="py-4 font-semibold">{transaction.amount}</TableCell>
+                <TableCell className="py-4">
+                  <Badge variant="secondary" className={statusStyles[transaction.status]}>
                     {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-[13px] text-muted-foreground">
+                <TableCell className="py-4 text-muted-foreground">
                   {transaction.date}
                 </TableCell>
-                <TableCell className="pr-6 text-[13px] text-muted-foreground">
+                <TableCell className="px-6 py-4 text-muted-foreground">
                   {transaction.time}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </Card>
-    </div>
+      </div>
+    </Card>
   )
 }

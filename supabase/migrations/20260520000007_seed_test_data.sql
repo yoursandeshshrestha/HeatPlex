@@ -278,3 +278,173 @@ INSERT INTO engineer_commissions (
     2500,
     'pending'
 ) ON CONFLICT DO NOTHING;
+
+-- =============================================================================
+-- STAFF AUTH USERS
+-- =============================================================================
+
+-- Auth user for Joe (Owner)
+INSERT INTO auth.users (
+    instance_id,
+    id,
+    aud,
+    role,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at,
+    confirmation_token,
+    recovery_token,
+    email_change_token_new,
+    email_change
+) VALUES (
+    '00000000-0000-0000-0000-000000000000',
+    '10000000-0000-0000-0000-000000000001',
+    'authenticated',
+    'authenticated',
+    'joe@heatplex.com',
+    '$2b$10$UHGQM7XXfy9bxYyfZ263/u6uh17yrQxcz9CuwROsIVkY/gPz/MsDS',
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{}',
+    NOW(),
+    NOW(),
+    '',
+    '',
+    '',
+    ''
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO auth.identities (
+    id,
+    provider_id,
+    user_id,
+    identity_data,
+    provider,
+    last_sign_in_at,
+    created_at,
+    updated_at
+) VALUES (
+    '10000000-0000-0000-0000-000000000001',
+    '10000000-0000-0000-0000-000000000001',
+    '10000000-0000-0000-0000-000000000001',
+    '{"sub":"10000000-0000-0000-0000-000000000001","email":"joe@heatplex.com","email_verified":true,"phone_verified":false}',
+    'email',
+    NOW(),
+    NOW(),
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- Auth user for Miles (Admin)
+INSERT INTO auth.users (
+    instance_id,
+    id,
+    aud,
+    role,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at,
+    confirmation_token,
+    recovery_token,
+    email_change_token_new,
+    email_change
+) VALUES (
+    '00000000-0000-0000-0000-000000000000',
+    '10000000-0000-0000-0000-000000000002',
+    'authenticated',
+    'authenticated',
+    'miles@heatplex.com',
+    '$2b$10$UHGQM7XXfy9bxYyfZ263/u6uh17yrQxcz9CuwROsIVkY/gPz/MsDS',
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{}',
+    NOW(),
+    NOW(),
+    '',
+    '',
+    '',
+    ''
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO auth.identities (
+    id,
+    provider_id,
+    user_id,
+    identity_data,
+    provider,
+    last_sign_in_at,
+    created_at,
+    updated_at
+) VALUES (
+    '10000000-0000-0000-0000-000000000002',
+    '10000000-0000-0000-0000-000000000002',
+    '10000000-0000-0000-0000-000000000002',
+    '{"sub":"10000000-0000-0000-0000-000000000002","email":"miles@heatplex.com","email_verified":true,"phone_verified":false}',
+    'email',
+    NOW(),
+    NOW(),
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- Auth user for Jackie (Staff)
+INSERT INTO auth.users (
+    instance_id,
+    id,
+    aud,
+    role,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at,
+    confirmation_token,
+    recovery_token,
+    email_change_token_new,
+    email_change
+) VALUES (
+    '00000000-0000-0000-0000-000000000000',
+    '10000000-0000-0000-0000-000000000003',
+    'authenticated',
+    'authenticated',
+    'jackie@heatplex.com',
+    '$2b$10$UHGQM7XXfy9bxYyfZ263/u6uh17yrQxcz9CuwROsIVkY/gPz/MsDS',
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{}',
+    NOW(),
+    NOW(),
+    '',
+    '',
+    '',
+    ''
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO auth.identities (
+    id,
+    provider_id,
+    user_id,
+    identity_data,
+    provider,
+    last_sign_in_at,
+    created_at,
+    updated_at
+) VALUES (
+    '10000000-0000-0000-0000-000000000003',
+    '10000000-0000-0000-0000-000000000003',
+    '10000000-0000-0000-0000-000000000003',
+    '{"sub":"10000000-0000-0000-0000-000000000003","email":"jackie@heatplex.com","email_verified":true,"phone_verified":false}',
+    'email',
+    NOW(),
+    NOW(),
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+

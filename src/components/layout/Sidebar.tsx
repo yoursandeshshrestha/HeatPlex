@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { sidebarConfig } from '@/config/sidebar'
 import {
   DropdownMenu,
@@ -22,7 +23,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isCollapsed = false }: SidebarProps) {
-  const [activeItem, setActiveItem] = useState('/admin')
+  const navigate = useNavigate()
+  const location = useLocation()
   const { signOut } = useAuth()
 
   async function handleSignOut() {
@@ -74,7 +76,7 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
               <div className="space-y-0.5 px-2">
                 {group.items.map((item) => {
                   const hasChildren = item.children && item.children.length > 0
-                  const isActive = item.href ? activeItem === item.href : false
+                  const isActive = item.href ? location.pathname === item.href : false
 
                   if (hasChildren && !isCollapsed) {
                     return (
@@ -106,11 +108,11 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
                         <CollapsibleContent>
                           <div className="ml-4 mt-0.5 space-y-0.5 border-l border-border pl-2">
                             {item.children?.map((child) => {
-                              const isChildActive = child.href ? activeItem === child.href : false
+                              const isChildActive = child.href ? location.pathname === child.href : false
                               return (
                                 <button
                                   key={child.href}
-                                  onClick={() => child.href && setActiveItem(child.href)}
+                                  onClick={() => child.href && navigate(child.href)}
                                   className={`group flex h-8 w-full cursor-pointer items-center gap-2 overflow-hidden rounded-md p-1.5 pl-2 text-left text-[13px] transition-colors ${
                                     isChildActive
                                       ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground'
@@ -138,7 +140,7 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
                   return (
                     <button
                       key={item.href}
-                      onClick={() => item.href && setActiveItem(item.href)}
+                      onClick={() => item.href && navigate(item.href)}
                       className={`group flex h-8 w-full cursor-pointer items-center overflow-hidden rounded-md p-1.5 text-left text-[13px] transition-colors ${
                         isCollapsed ? 'justify-center px-2' : 'gap-2 pl-2'
                       } ${

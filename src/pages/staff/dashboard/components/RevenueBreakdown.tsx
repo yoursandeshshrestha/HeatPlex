@@ -26,17 +26,15 @@ export function RevenueBreakdown() {
   })
 
   return (
-    <div className="flex h-full flex-col rounded-xl border bg-muted/30 pb-1.5 pl-1.5 pr-1.5 pt-3">
-      <div className="mb-2 flex items-start justify-between px-1">
-        <div className="text-[13px] font-medium text-muted-foreground/60">
-          Revenue Breakdown
-        </div>
-        <div className="text-muted-foreground/40">
-          <DollarSign className="size-4" />
+    <Card className="flex h-full flex-col">
+      <div className="flex items-center justify-between border-b p-4">
+        <div className="flex items-center gap-2">
+          <div className="text-sm font-medium">Revenue Breakdown</div>
+          <DollarSign className="size-4 text-muted-foreground" />
         </div>
       </div>
-      <Card className="flex-1 rounded-lg border px-4 pb-6 pt-6 ring-0">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="flex-1">
+        <div className="flex items-center justify-between px-4">
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Revenue by Category</h3>
             <p className="mt-1 text-2xl font-semibold">$20,320</p>
@@ -65,6 +63,7 @@ export function RevenueBreakdown() {
             </PopoverContent>
           </Popover>
         </div>
+        <div className="px-4 pt-4">
         <ResponsiveContainer width="100%" height={180}>
           <PieChart>
             <Pie
@@ -90,7 +89,8 @@ export function RevenueBreakdown() {
             />
           </PieChart>
         </ResponsiveContainer>
-        <div className="mt-4 space-y-2">
+        </div>
+        <div className="space-y-2 px-4 pb-4">
           {revenueData.map((item) => (
             <div key={item.name} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -104,7 +104,7 @@ export function RevenueBreakdown() {
             </div>
           ))}
         </div>
-      </Card>
-    </div>
+      </div>
+    </Card>
   )
 }

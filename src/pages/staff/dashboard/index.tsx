@@ -21,7 +21,7 @@ export function DashboardPage() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 p-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

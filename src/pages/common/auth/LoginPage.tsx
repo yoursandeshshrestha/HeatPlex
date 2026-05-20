@@ -35,19 +35,6 @@ export function LoginPage() {
     setError(null);
 
     try {
-      // Check if member exists first (to ensure only members can login)
-      const { data: member } = await supabase
-        .from('members')
-        .select('id, email')
-        .eq('email', email.toLowerCase())
-        .single();
-
-      if (!member) {
-        setError('No member found with this email');
-        setLoading(false);
-        return;
-      }
-
       // DEV MODE: Sign in with password (no email sent)
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: email.toLowerCase(),
@@ -55,17 +42,16 @@ export function LoginPage() {
       });
 
       if (signInError) {
-        setError('Auth user not created yet. Create in Supabase Dashboard: Authentication → Users → Add user (email: ' + email.toLowerCase() + ', password: password123, auto-confirm: ON)');
+        setError('Invalid email or password. Check that the user exists in the database.');
         setLoading(false);
         return;
       }
 
-      // Success - redirect
+      // Success - redirect to auto-redirect route
       window.location.href = '/account';
     } catch (err) {
       console.error(err);
       setError('Something went wrong. Please try again.');
-    } finally {
       setLoading(false);
     }
   }

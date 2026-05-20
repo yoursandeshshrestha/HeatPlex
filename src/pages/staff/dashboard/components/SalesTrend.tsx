@@ -24,17 +24,15 @@ export function SalesTrend() {
   const [activeTab, setActiveTab] = useState('Monthly')
 
   return (
-    <div className="flex h-full flex-col rounded-xl border bg-muted/30 pb-1.5 pl-1.5 pr-1.5 pt-3">
-      <div className="mb-2 flex items-start justify-between px-1">
-        <div className="text-[13px] font-medium text-muted-foreground/60">
-          Sales Trend
-        </div>
-        <div className="text-muted-foreground/40">
-          <TrendingUp className="size-4" />
+    <Card className="flex h-full flex-col">
+      <div className="flex items-center justify-between border-b p-4">
+        <div className="flex items-center gap-2">
+          <div className="text-sm font-medium">Sales Trend</div>
+          <TrendingUp className="size-4 text-muted-foreground" />
         </div>
       </div>
-      <Card className="flex-1 rounded-lg border px-6 pb-6 pt-6 ring-0">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="flex-1">
+        <div className="flex items-center justify-between px-4">
           <div className="flex items-center gap-4">
             <h3 className="text-base font-medium text-muted-foreground">
               Total Revenue: <span className="text-foreground">$20,320</span>
@@ -66,6 +64,7 @@ export function SalesTrend() {
             ))}
           </div>
         </div>
+        <div className="px-4 pt-6">
         <ResponsiveContainer width="100%" height={320}>
           <BarChart data={salesData} barGap={4}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
@@ -100,7 +99,8 @@ export function SalesTrend() {
             <Bar dataKey="existingUser" fill="#10b981" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </Card>
   )
 }

@@ -7,6 +7,7 @@ import {
   Bell,
   FileText,
   Settings,
+  UserCog,
 } from 'lucide-react'
 
 interface NavItem {
@@ -28,22 +29,27 @@ export const sidebarConfig: NavGroup[] = [
     items: [
       {
         title: 'Dashboard',
-        href: '/admin',
+        href: '/staff',
         icon: <LayoutDashboard className="size-4 shrink-0" />,
       },
       {
         title: 'Members',
-        href: '/admin/members',
+        href: '/staff/members',
         icon: <Users className="size-4 shrink-0" />,
       },
       {
+        title: 'Team',
+        href: '/staff/team',
+        icon: <UserCog className="size-4 shrink-0" />,
+      },
+      {
         title: 'Engineers',
-        href: '/admin/engineers',
+        href: '/staff/engineers',
         icon: <Wrench className="size-4 shrink-0" />,
       },
       {
         title: 'Commissions',
-        href: '/admin/commissions',
+        href: '/staff/commissions',
         icon: <DollarSign className="size-4 shrink-0" />,
       },
     ],
@@ -53,18 +59,18 @@ export const sidebarConfig: NavGroup[] = [
     items: [
       {
         title: 'Alerts',
-        href: '/admin/alerts',
+        href: '/staff/alerts',
         icon: <Bell className="size-4 shrink-0" />,
         badge: 0,
       },
       {
         title: 'Audit Log',
-        href: '/admin/audit',
+        href: '/staff/audit',
         icon: <FileText className="size-4 shrink-0" />,
       },
       {
         title: 'Settings',
-        href: '/admin/settings',
+        href: '/staff/settings',
         icon: <Settings className="size-4 shrink-0" />,
       },
     ],
