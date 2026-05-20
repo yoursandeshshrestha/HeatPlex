@@ -275,7 +275,7 @@ export function StaffPage() {
               value={roleFilter}
               onValueChange={(value) => value && updateSearchParams({ role: value })}
             >
-              <ComboboxInput placeholder="Role" className="h-9 w-[160px] cursor-pointer" />
+              <ComboboxInput placeholder="Role" className="h-9 w-[180px] cursor-pointer" />
               <ComboboxContent>
                 <ComboboxList>
                   <ComboboxItem value="all" className="cursor-pointer">All Roles</ComboboxItem>
@@ -289,7 +289,7 @@ export function StaffPage() {
               value={statusFilter}
               onValueChange={(value) => value && updateSearchParams({ status: value })}
             >
-              <ComboboxInput placeholder="Status" className="h-9 w-[160px] cursor-pointer rounded-lg! [&>div]:rounded-lg!" />
+              <ComboboxInput placeholder="Status" className="h-9 w-[180px] cursor-pointer" />
               <ComboboxContent>
                 <ComboboxList>
                   <ComboboxItem value="all" className="cursor-pointer">All Status</ComboboxItem>
@@ -298,20 +298,23 @@ export function StaffPage() {
                 </ComboboxList>
               </ComboboxContent>
             </Combobox>
-            <Combobox
-              value={limit.toString()}
-              onValueChange={(value) => value && updateSearchParams({ limit: value })}
-            >
-              <ComboboxInput placeholder="Per page" className="h-9 w-[100px] cursor-pointer rounded-lg! [&>div]:rounded-lg!" />
-              <ComboboxContent>
-                <ComboboxList>
-                  <ComboboxItem value="10" className="cursor-pointer">10 / page</ComboboxItem>
-                  <ComboboxItem value="25" className="cursor-pointer">25 / page</ComboboxItem>
-                  <ComboboxItem value="50" className="cursor-pointer">50 / page</ComboboxItem>
-                  <ComboboxItem value="100" className="cursor-pointer">100 / page</ComboboxItem>
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Pages:</span>
+              <Combobox
+                value={limit.toString()}
+                onValueChange={(value) => value && updateSearchParams({ limit: value })}
+              >
+                <ComboboxInput placeholder="10" className="h-9 w-[80px] cursor-pointer" />
+                <ComboboxContent>
+                  <ComboboxList>
+                    <ComboboxItem value="10" className="cursor-pointer">10</ComboboxItem>
+                    <ComboboxItem value="25" className="cursor-pointer">25</ComboboxItem>
+                    <ComboboxItem value="50" className="cursor-pointer">50</ComboboxItem>
+                    <ComboboxItem value="100" className="cursor-pointer">100</ComboboxItem>
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            </div>
           </div>
         </div>
         <div className="overflow-hidden">
