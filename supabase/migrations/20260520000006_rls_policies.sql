@@ -1,12 +1,11 @@
 -- =============================================================================
--- ROW LEVEL SECURITY (RLS) POLICIES
+-- ROW LEVEL SECURITY (RLS) POLICIES - Supabase Auth
 -- =============================================================================
+-- Uses Supabase Auth with auth.email() for access control
 
 -- Enable RLS on all tables
 ALTER TABLE members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
-ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE auth_tokens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE engineers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE engineer_commissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mandates ENABLE ROW LEVEL SECURITY;
@@ -33,33 +32,235 @@ ALTER TABLE waitlist_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
 
 -- =============================================================================
--- HELPER FUNCTIONS FOR RLS
+-- HELPER FUNCTIONS
 -- =============================================================================
 
--- Note: We'll use custom session management instead of Supabase Auth
--- Session validation will be done in the application layer
--- For now, we'll use a simpler approach with direct member/staff checks
+-- Get current member ID from authenticated user email
+CREATE OR REPLACE FUNCTION current_member_id()
+RETURNS uuid AS $$
+  SELECT id FROM public.members WHERE email = auth.email()
+$$ LANGUAGE SQL SECURITY DEFINER;
+
+-- Check if current user is staff
+CREATE OR REPLACE FUNCTION is_staff()
+RETURNS boolean AS $$
+  SELECT EXISTS (SELECT 1 FROM public.staff WHERE email = auth.email())
+$$ LANGUAGE SQL SECURITY DEFINER;
 
 -- =============================================================================
--- POLICIES
+-- POLICIES FOR USER PROFILES
 -- =============================================================================
 
--- Note: We're using custom authentication with the sessions table
--- Authorization will be handled in the application layer (Edge Functions)
--- For now, we'll keep RLS enabled but allow service role full access
+-- MEMBERS: Can read own profile, staff can read all, anyone can check if email exists (for login)
+CREATE POLICY "Members can read own profile"
+    ON members FOR SELECT
+    USING (
+        email = auth.email()
+        OR is_staff()
+        OR auth.email() IS NULL -- Allow unauthenticated reads for login check
+    );
 
--- Service role bypasses RLS automatically
--- Application code (Edge Functions) will use service role key and implement
--- authorization logic based on the sessions table
+-- MEMBERS: Can update own profile, staff can update all
+CREATE POLICY "Members can update own profile"
+    ON members FOR UPDATE
+    USING (email = auth.email() OR is_staff());
+
+-- STAFF: Only staff can read staff data
+CREATE POLICY "Staff can read staff data"
+    ON staff FOR SELECT
+    USING (is_staff());
+
+-- STAFF: Only staff can update staff data
+CREATE POLICY "Staff can update staff data"
+    ON staff FOR UPDATE
+    USING (is_staff());
 
 -- =============================================================================
--- SERVICE ROLE POLICIES (Full access for backend operations)
+-- POLICIES FOR MEMBER DATA
 -- =============================================================================
 
--- Allow service role to bypass RLS (for backend operations)
--- This will be used by Edge Functions with service role key
+-- BOOKINGS: Members can read/manage own bookings, staff can access all
+CREATE POLICY "Members can read own bookings"
+    ON bookings FOR SELECT
+    USING (
+        member_id = current_member_id()
+        OR is_staff()
+    );
 
--- Public read access for templates (needed for email rendering)
-CREATE POLICY "Templates are publicly readable"
+CREATE POLICY "Members can create own bookings"
+    ON bookings FOR INSERT
+    WITH CHECK (
+        member_id = current_member_id()
+        OR is_staff()
+    );
+
+CREATE POLICY "Members can update own bookings"
+    ON bookings FOR UPDATE
+    USING (
+        member_id = current_member_id()
+        OR is_staff()
+    );
+
+CREATE POLICY "Staff can delete bookings"
+    ON bookings FOR DELETE
+    USING (is_staff());
+
+-- JOBS: Members can read own jobs, staff can access all
+CREATE POLICY "Members can read own jobs"
+    ON member_jobs FOR SELECT
+    USING (
+        member_id = current_member_id()
+        OR is_staff()
+    );
+
+-- CERTIFICATES: Members can read own certificates, staff can access all
+CREATE POLICY "Members can read own certificates"
+    ON gas_certificates FOR SELECT
+    USING (
+        member_id = current_member_id()
+        OR is_staff()
+    );
+
+-- PAYMENTS: Members can read own payments, staff can access all
+CREATE POLICY "Members can read own payments"
+    ON payments FOR SELECT
+    USING (
+        member_id = current_member_id()
+        OR is_staff()
+    );
+
+-- SAVINGS: Members can read own savings, staff can access all
+CREATE POLICY "Members can read own savings"
+    ON savings_events FOR SELECT
+    USING (
+        member_id = current_member_id()
+        OR is_staff()
+    );
+
+-- MANDATES: Members can read own mandates, staff can access all
+CREATE POLICY "Members can read own mandates"
+    ON mandates FOR SELECT
+    USING (
+        member_id = current_member_id()
+        OR is_staff()
+    );
+
+-- SUBSCRIPTIONS: Members can read own subscriptions, staff can access all
+CREATE POLICY "Members can read own subscriptions"
+    ON subscriptions FOR SELECT
+    USING (
+        member_id = current_member_id()
+        OR is_staff()
+    );
+
+-- JOB COMPLETIONS: Members can read own job completions, staff can access all
+CREATE POLICY "Members can read own job completions"
+    ON job_completions FOR SELECT
+    USING (
+        member_id = current_member_id()
+        OR is_staff()
+    );
+
+-- =============================================================================
+-- POLICIES FOR REFERENCE DATA (PUBLIC READ)
+-- =============================================================================
+
+-- ENGINEERS: Public read access for active engineers
+CREATE POLICY "Active engineers are publicly readable"
+    ON engineers FOR SELECT
+    USING (active = true);
+
+-- TEMPLATES: Public read access for active templates
+CREATE POLICY "Active templates are publicly readable"
     ON templates FOR SELECT
     USING (active = true);
+
+-- =============================================================================
+-- POLICIES FOR INTERNAL/SYSTEM DATA (STAFF ONLY)
+-- =============================================================================
+
+-- ENGINEER COMMISSIONS: Staff only
+CREATE POLICY "Staff can manage engineer commissions"
+    ON engineer_commissions FOR ALL
+    USING (is_staff());
+
+-- SEQUENCE ENROLLMENTS: Staff only
+CREATE POLICY "Staff can manage sequence enrollments"
+    ON sequence_enrollments FOR ALL
+    USING (is_staff());
+
+-- SCHEDULED STEPS: Staff only
+CREATE POLICY "Staff can manage scheduled steps"
+    ON scheduled_steps FOR ALL
+    USING (is_staff());
+
+-- SEND LOG: Staff only
+CREATE POLICY "Staff can read send log"
+    ON send_log FOR SELECT
+    USING (is_staff());
+
+-- UNSUBSCRIBES: Anyone can unsubscribe, staff can read
+CREATE POLICY "Anyone can unsubscribe"
+    ON unsubscribes FOR INSERT
+    WITH CHECK (true);
+
+CREATE POLICY "Staff can read unsubscribes"
+    ON unsubscribes FOR SELECT
+    USING (is_staff());
+
+-- EMAIL VALIDATION CACHE: Staff only
+CREATE POLICY "Staff can manage email validation cache"
+    ON email_validation_cache FOR ALL
+    USING (is_staff());
+
+-- COMMUSOFT OUTBOX: Staff only
+CREATE POLICY "Staff can manage commusoft outbox"
+    ON commusoft_outbox FOR ALL
+    USING (is_staff());
+
+-- PROCESSED WEBHOOK EVENTS: Staff only
+CREATE POLICY "Staff can manage webhook events"
+    ON processed_webhook_events FOR ALL
+    USING (is_staff());
+
+-- SYNC DRIFT ALERTS: Staff only
+CREATE POLICY "Staff can manage drift alerts"
+    ON sync_drift_alerts FOR ALL
+    USING (is_staff());
+
+-- ALERTS: Staff only
+CREATE POLICY "Staff can manage alerts"
+    ON alerts FOR ALL
+    USING (is_staff());
+
+-- AUDIT LOG: Staff read only
+CREATE POLICY "Staff can read audit log"
+    ON audit_log FOR SELECT
+    USING (is_staff());
+
+-- INTERNAL NOTES: Staff only
+CREATE POLICY "Staff can manage internal notes"
+    ON internal_notes FOR ALL
+    USING (is_staff());
+
+-- WAITLIST ENTRIES: Anyone can join, staff can read
+CREATE POLICY "Anyone can join waitlist"
+    ON waitlist_entries FOR INSERT
+    WITH CHECK (true);
+
+CREATE POLICY "Staff can read waitlist"
+    ON waitlist_entries FOR SELECT
+    USING (is_staff());
+
+-- SYSTEM SETTINGS: Staff only
+CREATE POLICY "Staff can manage system settings"
+    ON system_settings FOR ALL
+    USING (is_staff());
+
+-- =============================================================================
+-- NOTES
+-- =============================================================================
+-- These policies use Supabase Auth's built-in functions:
+-- - auth.uid(): Current authenticated user's ID
+-- - auth.email(): Current authenticated user's email
+-- - Custom functions current_member_id() and auth.is_staff()

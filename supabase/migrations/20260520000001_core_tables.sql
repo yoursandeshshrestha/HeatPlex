@@ -73,38 +73,8 @@ CREATE TABLE staff (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Sessions table
-CREATE TABLE sessions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_type TEXT NOT NULL CHECK (owner_type IN ('member', 'staff')),
-    owner_id UUID NOT NULL,
-    expires_at TIMESTAMPTZ NOT NULL,
-    last_active_at TIMESTAMPTZ,
-    ip TEXT,
-    user_agent TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX idx_sessions_owner ON sessions(owner_type, owner_id);
-CREATE INDEX idx_sessions_expires ON sessions(expires_at);
-
--- Auth tokens (magic links)
-CREATE TABLE auth_tokens (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_type TEXT NOT NULL CHECK (owner_type IN ('member', 'staff')),
-    owner_id UUID,
-    owner_email CITEXT NOT NULL,
-    token_hash TEXT NOT NULL UNIQUE,
-    expires_at TIMESTAMPTZ NOT NULL,
-    consumed_at TIMESTAMPTZ,
-    attempt_count INT DEFAULT 0,
-    requested_ip TEXT,
-    requested_user_agent TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX idx_auth_tokens_hash ON auth_tokens(token_hash);
-CREATE INDEX idx_auth_tokens_email ON auth_tokens(owner_email);
+-- Note: Authentication handled by Supabase Auth
+-- No custom sessions or auth_tokens tables needed
 
 -- Engineers table
 CREATE TABLE engineers (

@@ -5,6 +5,62 @@
 -- Safe to run multiple times (uses ON CONFLICT DO NOTHING)
 -- =============================================================================
 
+-- Create auth users for testing (password: password123)
+-- Note: Password is bcrypt hashed version of "password123"
+INSERT INTO auth.users (
+    instance_id,
+    id,
+    aud,
+    role,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at,
+    confirmation_token,
+    recovery_token,
+    email_change_token_new,
+    email_change
+) VALUES (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000001',
+    'authenticated',
+    'authenticated',
+    'alice@heatplex.test',
+    '$2b$10$UHGQM7XXfy9bxYyfZ263/u6uh17yrQxcz9CuwROsIVkY/gPz/MsDS', -- password123
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{}',
+    NOW(),
+    NOW(),
+    '',
+    '',
+    '',
+    ''
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO auth.identities (
+    id,
+    provider_id,
+    user_id,
+    identity_data,
+    provider,
+    last_sign_in_at,
+    created_at,
+    updated_at
+) VALUES (
+    '00000000-0000-0000-0000-000000000001',
+    '00000000-0000-0000-0000-000000000001',
+    '00000000-0000-0000-0000-000000000001',
+    '{"sub":"00000000-0000-0000-0000-000000000001","email":"alice@heatplex.test","email_verified":true,"phone_verified":false}',
+    'email',
+    NOW(),
+    NOW(),
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
 -- Test member (annual plan)
 INSERT INTO members (
     id,
@@ -24,10 +80,10 @@ INSERT INTO members (
     savings_total_pence
 ) VALUES (
     '00000000-0000-0000-0000-000000000001',
-    'test.member@example.com',
+    'alice@heatplex.test',
     '+447700900000',
-    'Test',
-    'Member',
+    'Alice',
+    'Johnson',
     '64 Stanley Grove',
     'Battersea',
     'SW8 3PG',
@@ -58,10 +114,10 @@ INSERT INTO members (
     commusoft_customer_id
 ) VALUES (
     '00000000-0000-0000-0000-000000000002',
-    'monthly.member@example.com',
+    'bob@heatplex.test',
     '+447700900001',
-    'Monthly',
-    'Member',
+    'Bob',
+    'Smith',
     '123 Test Street',
     'Chelsea',
     'SW3 1AB',
@@ -90,10 +146,10 @@ INSERT INTO members (
     terms_accepted_at
 ) VALUES (
     '00000000-0000-0000-0000-000000000003',
-    'overdue.member@example.com',
+    'charlie@heatplex.test',
     '+447700900002',
-    'Overdue',
-    'Payment',
+    'Charlie',
+    'Brown',
     '456 Test Lane',
     'Clapham',
     'SW4 2CD',
