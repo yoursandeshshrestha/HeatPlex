@@ -275,7 +275,7 @@ export function StaffPage() {
               value={roleFilter}
               onValueChange={(value) => value && updateSearchParams({ role: value })}
             >
-              <ComboboxInput placeholder="Role" className="h-9 w-[160px] cursor-pointer rounded-lg! [&>div]:rounded-lg!" />
+              <ComboboxInput placeholder="Role" className="h-9 w-[160px] cursor-pointer" />
               <ComboboxContent>
                 <ComboboxList>
                   <ComboboxItem value="all" className="cursor-pointer">All Roles</ComboboxItem>

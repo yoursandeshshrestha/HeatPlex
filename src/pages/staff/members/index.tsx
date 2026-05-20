@@ -268,7 +268,7 @@ export function MembersPage() {
               value={statusFilter}
               onValueChange={(value) => value && updateSearchParams({ status: value })}
             >
-              <ComboboxInput placeholder="Status" className="h-9 w-[160px] cursor-pointer rounded-lg! [&>div]:rounded-lg!" />
+              <ComboboxInput placeholder="Status" className="h-9 w-[160px] cursor-pointer" />
               <ComboboxContent>
                 <ComboboxList>
                   <ComboboxItem value="all" className="cursor-pointer">All Status</ComboboxItem>
