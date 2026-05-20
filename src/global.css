@@ -102,4 +102,16 @@
     @apply font-sans;
     overscroll-behavior: none;
     }
+
+  /* Prevent white background on autofill */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px oklch(0.26 0 0) inset !important;
+    -webkit-text-fill-color: oklch(1 0 0) !important;
+    border-color: oklch(0.30 0 0) !important;
+    caret-color: oklch(1 0 0) !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
 }
