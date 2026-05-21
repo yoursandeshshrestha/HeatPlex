@@ -40,15 +40,18 @@ export function AssignEngineerModal({
   onSuccess,
 }: AssignEngineerModalProps) {
   const [engineers, setEngineers] = useState<{ id: string; name: string; slug: string | null }[]>([]);
-  const [selectedEngineerId, setSelectedEngineerId] = useState<string>('');
+  const [selectedEngineerId, setSelectedEngineerId] = useState<string>('unassigned');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      loadEngineers();
-      setSelectedEngineerId(booking?.engineer_id || '');
-    }
-  }, [open, booking]);
+    if (!open) return;
+    loadEngineers();
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !booking) return;
+    setSelectedEngineerId(booking.engineer_id ?? 'unassigned');
+  }, [open, booking?.id, booking?.engineer_id]);
 
   async function loadEngineers() {
     try {
@@ -65,9 +68,10 @@ export function AssignEngineerModal({
 
     setLoading(true);
     try {
-      await assignEngineerToBooking(booking.id, selectedEngineerId || null);
+      const engineerId = selectedEngineerId === 'unassigned' ? null : selectedEngineerId;
+      await assignEngineerToBooking(booking.id, engineerId);
       toast.success(
-        selectedEngineerId ? 'Engineer assigned successfully' : 'Engineer unassigned'
+        engineerId ? 'Engineer assigned successfully' : 'Engineer unassigned'
       );
       onSuccess();
       onOpenChange(false);
@@ -118,10 +122,10 @@ export function AssignEngineerModal({
           <div className="space-y-2">
             <Label htmlFor="engineer">Engineer</Label>
             <Select value={selectedEngineerId} onValueChange={setSelectedEngineerId}>
-              <SelectTrigger id="engineer" className="cursor-pointer">
+              <SelectTrigger id="engineer" className="w-full cursor-pointer">
                 <SelectValue placeholder="Select an engineer" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="z-100">
                 <SelectItem value="unassigned" className="cursor-pointer">
                   Unassigned
                 </SelectItem>
