@@ -6,6 +6,9 @@ import { DashboardPage as StaffDashboardPage } from '@/pages/staff/dashboard';
 import { MembersPage } from '@/pages/staff/members';
 import { StaffPage } from '@/pages/staff/team';
 import { MemberDashboardPage } from '@/pages/members/DashboardPage';
+import { MemberProfilePage } from '@/pages/members/ProfilePage';
+import { MemberMembershipPage } from '@/pages/members/MembershipPage';
+import { MemberServicesPage } from '@/pages/members/ServicesPage';
 import { LoginPage } from '@/pages/common/auth/LoginPage';
 import { VerifyPage } from '@/pages/common/auth/VerifyPage';
 import { SignupPlanPage } from '@/pages/common/signup/plan';
@@ -79,6 +82,36 @@ function AppRoutes() {
           <ProtectedRoute allowedUserType="member">
             <MemberLayout>
               <MemberDashboardPage />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/profile"
+        element={
+          <ProtectedRoute allowedUserType="member">
+            <MemberLayout>
+              <MemberProfilePage />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/membership"
+        element={
+          <ProtectedRoute allowedUserType="member">
+            <MemberLayout>
+              <MemberMembershipPage />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/services"
+        element={
+          <ProtectedRoute allowedUserType="member">
+            <MemberLayout>
+              <MemberServicesPage />
             </MemberLayout>
           </ProtectedRoute>
         }
