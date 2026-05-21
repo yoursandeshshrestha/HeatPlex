@@ -11,7 +11,7 @@ const RESEND_FROM =
   Deno.env.get('RESEND_FROM') ?? 'Heat Plex <onboarding@resend.dev>';
 
 interface EmailRequest {
-  type: 'welcome' | 'magic_link' | 'renewal_reminder' | 'payment_confirmation' | 'payment_failed';
+  type: 'welcome' | 'magic_link' | 'renewal_reminder' | 'payment_confirmation' | 'payment_failed' | 'booking_confirmation' | 'booking_cancelled' | 'booking_reminder';
   to: string;
   data: Record<string, string>;
 }
@@ -89,6 +89,12 @@ function getEmailContent(type: string, data: Record<string, string>) {
       return getPaymentConfirmationEmail(data);
     case 'payment_failed':
       return getPaymentFailedEmail(data);
+    case 'booking_confirmation':
+      return getBookingConfirmationEmail(data);
+    case 'booking_cancelled':
+      return getBookingCancelledEmail(data);
+    case 'booking_reminder':
+      return getBookingReminderEmail(data);
     default:
       throw new Error(`Unknown email type: ${type}`);
   }
@@ -315,17 +321,175 @@ function getPaymentFailedEmail(data: Record<string, string>) {
               <h2>Payment Failed</h2>
               <p>Hi ${firstName},</p>
               <p>We were unable to process your payment for Heat Plex membership.</p>
-              
+
               <div class="error-box">
                 <strong>Amount:</strong> ${amount}<br>
                 <strong>Action Required:</strong> Please update your payment method
               </div>
 
               <p>To avoid interruption to your membership benefits, please update your payment details as soon as possible.</p>
-              
+
               <a href="${data.dashboardUrl || 'https://app.heatplex.com/member/membership'}" class="button">Update Payment Method</a>
 
               <p style="margin-top: 30px;">Need help? Contact us at <a href="mailto:support@heatplex.com">support@heatplex.com</a></p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  };
+}
+
+function getBookingConfirmationEmail(data: Record<string, string>) {
+  const { firstName, date, slot, address } = data;
+  return {
+    subject: 'Service Booked - Heat Plex Membership',
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .content { background: #ffffff; padding: 40px 20px; }
+            .success-box { background: #d1fae5; border-left: 4px solid #10b981; padding: 16px; margin: 20px 0; }
+            .info-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; margin: 20px 0; }
+            .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="content">
+              <h2>Your Service is Booked! ✓</h2>
+              <p>Hi ${firstName},</p>
+              <p>Your annual boiler service has been successfully scheduled.</p>
+
+              <div class="success-box">
+                <strong>📅 Date:</strong> ${date}<br>
+                <strong>🕐 Time:</strong> ${slot}<br>
+                <strong>📍 Location:</strong> ${address}
+              </div>
+
+              <div class="info-box">
+                <p><strong>What to expect:</strong></p>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                  <li>Service duration: 60-90 minutes</li>
+                  <li>Our engineer will call 30 minutes before arrival</li>
+                  <li>Full boiler inspection and safety checks</li>
+                  <li>CP12 certificate issued on completion</li>
+                </ul>
+              </div>
+
+              <p><strong>Need to reschedule?</strong> You can reschedule or cancel up to 48 hours before your appointment from your dashboard.</p>
+
+              <a href="${data.dashboardUrl || 'https://app.heatplex.com/member/services'}" class="button">View Booking</a>
+
+              <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                For changes within 48 hours or urgent queries, call us at 020 7622 0444
+              </p>
+
+              <p>Best regards,<br>The Heat Plex Team</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  };
+}
+
+function getBookingCancelledEmail(data: Record<string, string>) {
+  const { firstName, date, slot } = data;
+  return {
+    subject: 'Booking Cancelled - Heat Plex Service',
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .content { background: #ffffff; padding: 40px 20px; }
+            .info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; }
+            .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="content">
+              <h2>Booking Cancelled</h2>
+              <p>Hi ${firstName},</p>
+              <p>Your service appointment has been successfully cancelled.</p>
+
+              <div class="info-box">
+                <strong>📅 Date:</strong> ${date}<br>
+                <strong>🕐 Time:</strong> ${slot}
+              </div>
+
+              <p>You can book a new appointment anytime from your dashboard.</p>
+
+              <a href="${data.dashboardUrl || 'https://app.heatplex.com/member/services'}" class="button">Book New Service</a>
+
+              <p style="margin-top: 30px;">Need help? Contact us at <a href="mailto:support@heatplex.com">support@heatplex.com</a> or call 020 7622 0444</p>
+
+              <p>Best regards,<br>The Heat Plex Team</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  };
+}
+
+function getBookingReminderEmail(data: Record<string, string>) {
+  const { firstName, date, slot, address } = data;
+  return {
+    subject: 'Reminder: Service Tomorrow - Heat Plex',
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .content { background: #ffffff; padding: 40px 20px; }
+            .reminder-box { background: #dbeafe; border-left: 4px solid #3b82f6; padding: 16px; margin: 20px 0; }
+            .info-box { background: #f3f4f6; padding: 16px; margin: 20px 0; border-radius: 6px; }
+            .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="content">
+              <h2>Service Reminder 🔔</h2>
+              <p>Hi ${firstName},</p>
+              <p>This is a friendly reminder that your boiler service is scheduled for tomorrow.</p>
+
+              <div class="reminder-box">
+                <strong>📅 Date:</strong> ${date}<br>
+                <strong>🕐 Time:</strong> ${slot}<br>
+                <strong>📍 Location:</strong> ${address}
+              </div>
+
+              <div class="info-box">
+                <p><strong>Important reminders:</strong></p>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                  <li>Our engineer will call 30 minutes before arrival</li>
+                  <li>Please ensure someone age 18+ is home</li>
+                  <li>Clear access to the boiler would be appreciated</li>
+                  <li>Service duration: 60-90 minutes</li>
+                </ul>
+              </div>
+
+              <p><strong>Need to reschedule?</strong> Please call us immediately at 020 7622 0444 as your appointment is within 48 hours.</p>
+
+              <a href="${data.dashboardUrl || 'https://app.heatplex.com/member/services'}" class="button">View Booking Details</a>
+
+              <p style="margin-top: 30px;">We look forward to seeing you tomorrow!</p>
+
+              <p>Best regards,<br>The Heat Plex Team</p>
             </div>
           </div>
         </body>
