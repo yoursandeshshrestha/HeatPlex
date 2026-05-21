@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Users,
   Wrench,
+  Calendar,
   DollarSign,
   Bell,
   FileText,
@@ -46,6 +47,11 @@ export const sidebarConfig: NavGroup[] = [
         title: 'Engineers',
         href: '/staff/engineers',
         icon: <Wrench className="size-4 shrink-0" />,
+      },
+      {
+        title: 'Bookings',
+        href: '/staff/bookings',
+        icon: <Calendar className="size-4 shrink-0" />,
       },
       {
         title: 'Commissions',

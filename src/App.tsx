@@ -4,6 +4,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { MemberLayout } from '@/components/layout/MemberLayout';
 import { DashboardPage as StaffDashboardPage } from '@/pages/staff/dashboard';
 import { MembersPage } from '@/pages/staff/members';
+import { EngineersPage } from '@/pages/staff/engineers';
+import { BookingsPage } from '@/pages/staff/bookings';
 import { StaffPage } from '@/pages/staff/team';
 import { MemberDashboardPage } from '@/pages/members/DashboardPage';
 import { MemberProfilePage } from '@/pages/members/ProfilePage';
@@ -136,6 +138,26 @@ function AppRoutes() {
           <ProtectedRoute allowedUserType="staff">
             <DashboardLayout>
               <MembersPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/engineers"
+        element={
+          <ProtectedRoute allowedUserType="staff">
+            <DashboardLayout>
+              <EngineersPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/bookings"
+        element={
+          <ProtectedRoute allowedUserType="staff">
+            <DashboardLayout>
+              <BookingsPage />
             </DashboardLayout>
           </ProtectedRoute>
         }
