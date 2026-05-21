@@ -5,9 +5,12 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { format, parse } from 'date-fns';
 import type { Tables } from '@/lib/supabase';
 import { formatDate } from '@/lib/date-utils';
+import { useUpcomingBookings } from '@/lib/supabase/hooks';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Calendar,
   Phone,
@@ -19,6 +22,7 @@ import {
   User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatSlotLabel, type TimeSlot } from '@/types/booking';
 import {
   DetailGrid,
   PanelEmpty,
@@ -29,6 +33,7 @@ import {
 } from './member-ui';
 
 type Member = Tables<'members'>;
+type Booking = Tables<'bookings'>;
 
 interface OverviewTabProps {
   member: Member;
@@ -107,15 +112,30 @@ function QuickActionTile({
   );
 }
 
+function upcomingBookingsSubtitle(bookings: Booking[]): string {
+  if (bookings.length === 0) return 'No appointments scheduled';
+  if (bookings.length === 1) {
+    const date = parse(bookings[0].scheduled_date, 'yyyy-MM-dd', new Date());
+    return `Next: ${format(date, 'EEE d MMM')}`;
+  }
+  return `${bookings.length} service appointments`;
+}
+
 export function OverviewTab({ member }: OverviewTabProps) {
   const navigate = useNavigate();
+  const { data, loading: loadingBookings } = useUpcomingBookings(member.id);
+  const upcomingBookings = data ?? [];
+
   const planPrice = member.plan === 'annual' ? '£199/year' : '£19.99/month';
   const savings = ((member.savings_total_pence || 0) / 100).toFixed(2);
+  const nextBooking = upcomingBookings[0];
 
   const quickActions: QuickAction[] = [
     {
       label: 'Book Service',
-      description: 'Schedule service or request a repair',
+      description: nextBooking
+        ? 'View or manage your upcoming visit'
+        : 'Schedule your free annual service',
       icon: Wrench,
       style: { fill: 'bg-secondary/35', icon: 'text-secondary' },
       path: '/member/services',
@@ -197,8 +217,14 @@ export function OverviewTab({ member }: OverviewTabProps) {
         </StatPanel>
 
         <StatPanel title="Upcoming Bookings" icon={Calendar}>
-          <p className="text-2xl font-semibold tracking-tight">0</p>
-          <p className="mt-1.5 text-xs text-muted-foreground">Service appointments</p>
+          {loadingBookings ? (
+            <p className="text-2xl font-semibold tracking-tight text-muted-foreground">—</p>
+          ) : (
+            <p className="text-2xl font-semibold tracking-tight">{upcomingBookings.length}</p>
+          )}
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            {loadingBookings ? 'Loading…' : upcomingBookingsSubtitle(upcomingBookings)}
+          </p>
         </StatPanel>
 
         <StatPanel title="Member Since" icon={Calendar}>
@@ -226,12 +252,39 @@ export function OverviewTab({ member }: OverviewTabProps) {
       </SectionPanel>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <SectionPanel title="Upcoming Bookings" flushList>
-          <PanelEmpty
-            flush
-            message="No upcoming bookings"
-            hint="Book a service from the Services page"
-          />
+        <SectionPanel
+          title="Upcoming Bookings"
+          flushList
+          action={
+            upcomingBookings.length > 0 ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 cursor-pointer px-2 text-xs"
+                onClick={() => navigate('/member/services')}
+              >
+                View all
+              </Button>
+            ) : undefined
+          }
+        >
+          {loadingBookings ? (
+            <div className="flex justify-center px-6 py-10">
+              <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            </div>
+          ) : upcomingBookings.length > 0 ? (
+            <ul className="-mx-6 divide-y divide-border">
+              {upcomingBookings.map((booking) => (
+                <OverviewBookingItem key={booking.id} booking={booking} />
+              ))}
+            </ul>
+          ) : (
+            <PanelEmpty
+              flush
+              message="No upcoming bookings"
+              hint="Book your free annual service on the Services page"
+            />
+          )}
         </SectionPanel>
 
         <SectionPanel title="Recent Activity" flushList>
@@ -243,5 +296,42 @@ export function OverviewTab({ member }: OverviewTabProps) {
         </SectionPanel>
       </div>
     </div>
+  );
+}
+
+function OverviewBookingItem({ booking }: { booking: Booking }) {
+  const date = parse(booking.scheduled_date, 'yyyy-MM-dd', new Date());
+  const slot = booking.slot as TimeSlot;
+  const isRescheduled = booking.status === 'rescheduled';
+
+  return (
+    <li className="flex items-start justify-between gap-3 px-6 py-4">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="flex w-12 shrink-0 flex-col items-center rounded-lg border border-border/80 bg-muted/30 py-1.5">
+          <span className="text-[9px] font-semibold uppercase text-muted-foreground">
+            {format(date, 'MMM')}
+          </span>
+          <span className="text-lg font-bold leading-none">{format(date, 'd')}</span>
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-medium">Annual boiler service</p>
+          <p className="text-xs text-muted-foreground">
+            {format(date, 'EEEE, d MMMM yyyy')}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{formatSlotLabel(slot, true)}</p>
+        </div>
+      </div>
+      <Badge
+        variant="outline"
+        className={cn(
+          'shrink-0 capitalize',
+          isRescheduled
+            ? 'border-amber-500/30 text-amber-700 dark:text-amber-400'
+            : 'border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+        )}
+      >
+        {isRescheduled ? 'Rescheduled' : 'Confirmed'}
+      </Badge>
+    </li>
   );
 }
