@@ -30,39 +30,65 @@ export function SignupPaymentPage() {
     try {
       const marketingOptIn = searchParams.get('marketingOptIn') === 'true';
       const email = searchParams.get('email') || '';
+      const firstName = searchParams.get('firstName') || '';
+      const lastName = searchParams.get('lastName') || '';
 
-      // 1. Create Supabase auth user (for login)
+      // 1. Create GoCardless billing request
+      const { data: supabaseData } = await supabase.auth.getSession();
+      const redirectUri = `${window.location.origin}/join/confirm`;
+
+      const gcResponse = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-signup`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            email: email.toLowerCase(),
+            firstName,
+            lastName,
+            plan,
+            redirectUri,
+          }),
+        }
+      );
+
+      if (!gcResponse.ok) {
+        const error = await gcResponse.json();
+        setError(error.error || 'Failed to create payment request');
+        setLoading(false);
+        return;
+      }
+
+      const { customerId, billingRequestId, authorizationUrl } = await gcResponse.json();
+
+      // 2. Create Supabase auth user (for login)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.toLowerCase(),
         password: 'password123', // Dev mode password
         options: {
           emailRedirectTo: window.location.origin + '/account',
           data: {
-            first_name: searchParams.get('firstName'),
-            last_name: searchParams.get('lastName'),
+            first_name: firstName,
+            last_name: lastName,
           },
         },
       });
 
-      console.log('Auth signup response:', { authData, authError });
-
-      if (authError) {
-        // Handle specific error cases
-        if (authError.message.includes('already registered')) {
-          setError('An account with this email already exists. Please login instead.');
-        } else {
-          setError(`Sign up failed: ${authError.message}`);
-        }
+      if (authError && !authError.message.includes('already registered')) {
+        setError(`Sign up failed: ${authError.message}`);
         setLoading(false);
         return;
       }
 
-      // 2. Create member record
+      // 3. Create member record with pending status
       const { data: member, error: memberError } = await supabase
         .from('members')
         .insert({
-          first_name: searchParams.get('firstName') || '',
-          last_name: searchParams.get('lastName') || '',
+          first_name: firstName,
+          last_name: lastName,
           email: email.toLowerCase(),
           phone: searchParams.get('phone') || '',
           address_line_1: searchParams.get('addressLine1') || '',
@@ -73,8 +99,9 @@ export function SignupPaymentPage() {
           promo_code: searchParams.get('promoCode') || null,
           marketing_email_opt_in: marketingOptIn,
           marketing_consent_at: marketingOptIn ? new Date().toISOString() : null,
-          status: 'active',
+          status: 'pending',
           terms_accepted_at: new Date().toISOString(),
+          gocardless_customer_id: customerId,
           started_at: new Date().toISOString(),
           renewal_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
         })
@@ -87,10 +114,8 @@ export function SignupPaymentPage() {
         return;
       }
 
-      // Navigate to done page with member ID
-      const params = new URLSearchParams(searchParams);
-      params.set('memberId', member.id);
-      navigate(`/join/done?${params.toString()}`);
+      // 4. Redirect to GoCardless authorization page
+      window.location.href = authorizationUrl;
     } catch (err) {
       console.error('Payment error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';

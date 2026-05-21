@@ -15,6 +15,7 @@ import { SignupPlanPage } from '@/pages/common/signup/plan';
 import { SignupDetailsPage } from '@/pages/common/signup/details';
 import { SignupConfirmMatchPage } from '@/pages/common/signup/confirm-match';
 import { SignupPaymentPage } from '@/pages/common/signup/payment';
+import { SignupConfirmPage } from '@/pages/common/signup/confirm';
 import { SignupDonePage } from '@/pages/common/signup/done';
 import { LoadingScreen } from '@/components/ui/loading-screen';
 
@@ -70,6 +71,7 @@ function AppRoutes() {
       <Route path="/join/details" element={<SignupDetailsPage />} />
       <Route path="/join/confirm-match" element={<SignupConfirmMatchPage />} />
       <Route path="/join/payment" element={<SignupPaymentPage />} />
+      <Route path="/join/confirm" element={<SignupConfirmPage />} />
       <Route path="/join/done" element={<SignupDonePage />} />
 
       {/* Auto-redirect to correct dashboard */}
