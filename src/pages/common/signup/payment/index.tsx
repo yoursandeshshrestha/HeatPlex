@@ -61,14 +61,14 @@ export function SignupPaymentPage() {
       const { data: member, error: memberError } = await supabase
         .from('members')
         .insert({
-          first_name: searchParams.get('firstName'),
-          last_name: searchParams.get('lastName'),
+          first_name: searchParams.get('firstName') || '',
+          last_name: searchParams.get('lastName') || '',
           email: email.toLowerCase(),
-          phone: searchParams.get('phone'),
-          address_line_1: searchParams.get('addressLine1'),
+          phone: searchParams.get('phone') || '',
+          address_line_1: searchParams.get('addressLine1') || '',
           address_line_2: searchParams.get('addressLine2') || null,
-          address_town: searchParams.get('town'),
-          address_postcode: searchParams.get('postcode'),
+          address_town: searchParams.get('town') || '',
+          address_postcode: searchParams.get('postcode') || '',
           plan,
           promo_code: searchParams.get('promoCode') || null,
           marketing_email_opt_in: marketingOptIn,
