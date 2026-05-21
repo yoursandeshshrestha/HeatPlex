@@ -6,6 +6,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!;
+/** Use onboarding@resend.dev for dev; production: Heat Plex <membership@heatplex.com> after domain verify */
+const RESEND_FROM =
+  Deno.env.get('RESEND_FROM') ?? 'Heat Plex <onboarding@resend.dev>';
 
 interface EmailRequest {
   type: 'welcome' | 'magic_link' | 'renewal_reminder' | 'payment_confirmation' | 'payment_failed';
@@ -43,7 +46,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Heat Plex <membership@heatplex.com>',
+        from: RESEND_FROM,
         to,
         subject: emailContent.subject,
         html: emailContent.html,

@@ -8,8 +8,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { createHmac } from 'https://deno.land/std@0.168.0/node/crypto.ts';
 
 const WEBHOOK_SECRET = Deno.env.get('GOCARDLESS_WEBHOOK_SECRET')!;
+const GOCARDLESS_ACCESS_TOKEN = Deno.env.get('GOCARDLESS_ACCESS_TOKEN')!;
+const GOCARDLESS_ENVIRONMENT = Deno.env.get('GOCARDLESS_ENVIRONMENT') || 'sandbox';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+const GC_API_BASE =
+  GOCARDLESS_ENVIRONMENT === 'live'
+    ? 'https://api.gocardless.com'
+    : 'https://api-sandbox.gocardless.com';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -23,6 +30,7 @@ interface WebhookEvent {
     subscription?: string;
     mandate?: string;
     customer?: string;
+    billing_request?: string;
   };
 }
 
@@ -102,6 +110,14 @@ async function processEvent(event: WebhookEvent) {
         break;
       case 'finished':
         await handleSubscriptionFinished(event);
+        break;
+    }
+  }
+
+  if (event.resource_type === 'billing_requests') {
+    switch (event.action) {
+      case 'fulfilled':
+        await handleBillingRequestFulfilled(event);
         break;
     }
   }
@@ -190,13 +206,93 @@ async function handleSubscriptionFinished(event: WebhookEvent) {
   }
 }
 
+async function handleBillingRequestFulfilled(event: WebhookEvent) {
+  const updates: Record<string, string> = { status: 'active' };
+
+  if (event.links.billing_request) {
+    const ids = await fetchBillingRequestResourceIds(event.links.billing_request);
+    if (ids.mandateId) updates.gocardless_mandate_id = ids.mandateId;
+    if (ids.paymentId) updates.gocardless_payment_id = ids.paymentId;
+    if (ids.subscriptionId) updates.gocardless_subscription_id = ids.subscriptionId;
+  } else if (event.links.mandate) {
+    updates.gocardless_mandate_id = event.links.mandate;
+  }
+
+  let query = supabase.from('members').update(updates);
+
+  if (event.links.billing_request) {
+    query = query.eq('gocardless_billing_request_id', event.links.billing_request);
+  } else if (event.links.customer) {
+    query = query.eq('gocardless_customer_id', event.links.customer);
+  } else {
+    console.error('billing_requests.fulfilled missing billing_request and customer links');
+    return;
+  }
+
+  const { error } = await query;
+
+  if (error) {
+    console.error('Error activating member after billing request:', error);
+  } else {
+    console.log('Member activated via billing_requests.fulfilled');
+  }
+}
+
 async function handleMandateCreated(event: WebhookEvent) {
-  console.log('Mandate created:', event.links.mandate);
+  await saveMandateOnMember(event.links.mandate, event.links.customer);
 }
 
 async function handleMandateActive(event: WebhookEvent) {
-  // Mandate is now active and ready to collect payments
-  console.log('Mandate active:', event.links.mandate);
+  await saveMandateOnMember(event.links.mandate, event.links.customer);
+}
+
+async function saveMandateOnMember(
+  mandateId: string | undefined,
+  customerId: string | undefined
+) {
+  if (!mandateId || !customerId) {
+    console.log('Mandate event missing mandate or customer link');
+    return;
+  }
+
+  const { error } = await supabase
+    .from('members')
+    .update({ gocardless_mandate_id: mandateId })
+    .eq('gocardless_customer_id', customerId);
+
+  if (error) {
+    console.error('Error saving mandate on member:', error);
+  } else {
+    console.log('Mandate saved on member:', mandateId);
+  }
+}
+
+async function fetchBillingRequestResourceIds(billingRequestId: string) {
+  const empty = { mandateId: null as string | null, paymentId: null as string | null, subscriptionId: null as string | null };
+
+  try {
+    const res = await fetch(`${GC_API_BASE}/billing_requests/${billingRequestId}`, {
+      headers: {
+        Authorization: `Bearer ${GOCARDLESS_ACCESS_TOKEN}`,
+        'GoCardless-Version': '2015-07-06',
+      },
+    });
+    if (!res.ok) return empty;
+
+    const { billing_requests: br } = await res.json();
+    const mandateRequest = br.mandate_request?.links;
+    const paymentRequest = br.payment_request?.links;
+    const subscriptionRequest = br.subscription_request?.links;
+
+    return {
+      mandateId: mandateRequest?.mandate ?? br.links?.mandate ?? null,
+      paymentId: paymentRequest?.payment ?? br.links?.payment ?? null,
+      subscriptionId: subscriptionRequest?.subscription ?? br.links?.subscription ?? null,
+    };
+  } catch (e) {
+    console.error('Failed to fetch billing request for webhook:', e);
+    return empty;
+  }
 }
 
 async function handleMandateFailed(event: WebhookEvent) {

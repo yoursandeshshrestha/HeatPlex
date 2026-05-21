@@ -140,8 +140,6 @@ serve(async (req) => {
         billing_request_flows: {
           redirect_uri: redirectUri,
           exit_uri: `${redirectUri}?status=cancelled`,
-          lock_customer_details: true,
-          lock_currency: true,
           links: {
             billing_request: billingRequestId,
           },
