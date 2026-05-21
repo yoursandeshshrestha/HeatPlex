@@ -7,10 +7,14 @@ import { MembersPage } from '@/pages/staff/members';
 import { EngineersPage } from '@/pages/staff/engineers';
 import { BookingsPage } from '@/pages/staff/bookings';
 import { StaffPage } from '@/pages/staff/team';
-import { MemberDashboardPage } from '@/pages/members/DashboardPage';
-import { MemberProfilePage } from '@/pages/members/ProfilePage';
-import { MemberMembershipPage } from '@/pages/members/MembershipPage';
-import { MemberServicesPage } from '@/pages/members/ServicesPage';
+import { MemberDashboardPage } from '@/pages/members/dashboard';
+import { MemberProfilePage } from '@/pages/members/profile';
+import { MemberMembershipPage } from '@/pages/members/membership';
+import { MemberServicesPage } from '@/pages/members/services';
+import { BillingPage } from '@/pages/members/billing';
+import { JobsPage } from '@/pages/members/jobs';
+import { CertificatesPage } from '@/pages/members/certificates';
+import { CancelPage } from '@/pages/members/cancel';
 import { LoginPage } from '@/pages/common/auth/LoginPage';
 import { VerifyPage } from '@/pages/common/auth/VerifyPage';
 import { SignupPlanPage } from '@/pages/common/signup/plan';
@@ -116,6 +120,46 @@ function AppRoutes() {
           <ProtectedRoute allowedUserType="member">
             <MemberLayout>
               <MemberServicesPage />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/billing"
+        element={
+          <ProtectedRoute allowedUserType="member">
+            <MemberLayout>
+              <BillingPage />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/jobs"
+        element={
+          <ProtectedRoute allowedUserType="member">
+            <MemberLayout>
+              <JobsPage />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/certificates"
+        element={
+          <ProtectedRoute allowedUserType="member">
+            <MemberLayout>
+              <CertificatesPage />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/member/cancel"
+        element={
+          <ProtectedRoute allowedUserType="member">
+            <MemberLayout>
+              <CancelPage />
             </MemberLayout>
           </ProtectedRoute>
         }

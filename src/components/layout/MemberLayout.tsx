@@ -24,6 +24,9 @@ import {
   Phone,
   ChevronRight,
   Settings,
+  FileText,
+  Award,
+  Receipt,
 } from 'lucide-react';
 
 interface MemberLayoutProps {
@@ -38,9 +41,11 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { icon: Home, label: 'Overview', path: '/member' },
-  { icon: User, label: 'Profile', path: '/member/profile' },
-  { icon: CreditCard, label: 'Membership', path: '/member/membership' },
   { icon: Wrench, label: 'Services', path: '/member/services' },
+  { icon: FileText, label: 'Jobs & Invoices', path: '/member/jobs' },
+  { icon: Award, label: 'Certificates', path: '/member/certificates' },
+  { icon: Receipt, label: 'Billing', path: '/member/billing' },
+  { icon: User, label: 'Profile', path: '/member/profile' },
 ];
 
 export function MemberLayout({ children }: MemberLayoutProps) {
