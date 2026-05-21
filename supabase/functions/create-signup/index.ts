@@ -20,9 +20,22 @@ interface SignupRequest {
   redirectUri: string;
 }
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+    return new Response('Method not allowed', {
+      status: 405,
+      headers: corsHeaders,
+    });
   }
 
   try {
@@ -33,7 +46,10 @@ serve(async (req) => {
     if (!email || !firstName || !lastName || !plan || !redirectUri) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
       );
     }
 
@@ -62,7 +78,7 @@ serve(async (req) => {
       console.error('GoCardless customer creation error:', error);
       return new Response(
         JSON.stringify({ error: 'Failed to create customer' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -105,7 +121,7 @@ serve(async (req) => {
       console.error('GoCardless billing request error:', error);
       return new Response(
         JSON.stringify({ error: 'Failed to create billing request' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -138,7 +154,7 @@ serve(async (req) => {
       console.error('GoCardless flow creation error:', error);
       return new Response(
         JSON.stringify({ error: 'Failed to create authorization flow' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -152,7 +168,7 @@ serve(async (req) => {
         authorizationUrl: flowData.billing_request_flows.authorisation_url,
       }),
       {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       }
     );
