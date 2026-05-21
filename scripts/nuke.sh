@@ -24,6 +24,7 @@ echo ""
 echo -e "${BLUE}🔐 Step 2/3: Setting Supabase secrets...${NC}"
 npx supabase secrets set \
   RESEND_API_KEY=REDACTED_RESEND_API_KEY \
+  RESEND_FROM='Heat Plex <onboarding@resend.dev>' \
   GOCARDLESS_ACCESS_TOKEN=REDACTED_GOCARDLESS_ACCESS_TOKEN \
   GOCARDLESS_ENVIRONMENT=sandbox \
   GOCARDLESS_WEBHOOK_SECRET='REDACTED_GOCARDLESS_WEBHOOK_SECRET=='
@@ -43,6 +44,14 @@ if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ create-signup deployed${NC}"
 else
     echo -e "${YELLOW}⚠ create-signup deployment failed${NC}"
+fi
+
+echo "Deploying complete-signup..."
+npx supabase functions deploy complete-signup
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ complete-signup deployed${NC}"
+else
+    echo -e "${YELLOW}⚠ complete-signup deployment failed${NC}"
 fi
 
 echo "Deploying send-email..."

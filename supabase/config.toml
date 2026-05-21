@@ -37,3 +37,20 @@ enable_signup = true
 enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false
+
+# Signup and webhook functions run before login or from external providers.
+# API keys go in the `apikey` header, not Authorization: Bearer.
+[functions.create-signup]
+verify_jwt = false
+
+[functions.complete-signup]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.search-customers]
+verify_jwt = false
+
+[functions.gocardless-webhook]
+verify_jwt = false
