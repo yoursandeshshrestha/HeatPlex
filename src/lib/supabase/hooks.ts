@@ -81,6 +81,16 @@ export function useMemberBookings(memberId: string | null) {
   );
 }
 
+export function useUpcomingBookings(memberId: string | null) {
+  return useQuery(
+    () => {
+      if (!memberId) throw new Error('Member ID required');
+      return queries.getUpcomingBookings(memberId);
+    },
+    [memberId]
+  );
+}
+
 export function useActiveBooking(memberId: string | null) {
   return useQuery(
     () => {

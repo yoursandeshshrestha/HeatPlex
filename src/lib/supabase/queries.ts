@@ -3,6 +3,7 @@
  * Provides type-safe wrappers around common Supabase queries
  */
 
+import { format } from 'date-fns';
 import { supabase } from './client';
 import type { Tables } from './client';
 
@@ -65,21 +66,24 @@ export async function getMemberBookings(memberId: string) {
   return data;
 }
 
-export async function getActiveBooking(memberId: string) {
+export async function getUpcomingBookings(memberId: string) {
+  const today = format(new Date(), 'yyyy-MM-dd');
+
   const { data, error } = await supabase
     .from('bookings')
-    .select(`
-      *,
-      engineer:engineers(id, name, slug)
-    `)
+    .select('*')
     .eq('member_id', memberId)
-    .in('status', ['booked'])
-    .order('scheduled_date', { ascending: true })
-    .limit(1)
-    .single();
+    .in('status', ['booked', 'rescheduled'])
+    .gte('scheduled_date', today)
+    .order('scheduled_date', { ascending: true });
 
-  if (error && error.code !== 'PGRST116') throw error;
-  return data;
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getActiveBooking(memberId: string) {
+  const upcoming = await getUpcomingBookings(memberId);
+  return upcoming[0] ?? null;
 }
 
 // =============================================================================
