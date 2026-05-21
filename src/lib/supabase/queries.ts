@@ -305,14 +305,48 @@ export async function getMemberJobs(memberId: string, limit = 10) {
 // PAYMENTS
 // =============================================================================
 
-export async function getMemberPayments(memberId: string) {
-  const { data, error } = await supabase
+export async function getMemberPayments(memberId: string, limit?: number) {
+  let query = supabase
     .from('payments')
     .select('*')
     .eq('member_id', memberId)
     .order('created_at', { ascending: false });
 
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
   if (error) throw error;
+  return data;
+}
+
+export async function getMemberMandate(memberId: string) {
+  const { data, error } = await supabase
+    .from('mandates')
+    .select('*')
+    .eq('member_id', memberId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error && error.code !== 'PGRST116') throw error; // PGRST116 = not found
+  return data;
+}
+
+export async function getMemberSubscription(memberId: string) {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('member_id', memberId)
+    .in('status', ['active', 'pending_customer_approval'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error && error.code !== 'PGRST116') throw error;
   return data;
 }
 
