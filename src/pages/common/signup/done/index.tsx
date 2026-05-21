@@ -1,6 +1,6 @@
 /**
  * Signup Step 5: Welcome
- * Confirmation page after successful signup
+ * Shown after /join/confirm has verified payment and activated the member.
  */
 
 import { useSearchParams } from 'react-router-dom';
@@ -17,7 +17,6 @@ export function SignupDonePage() {
   const isAnnual = plan === 'annual';
   const amount = isAnnual ? '£199' : '£19.99/month';
 
-  // Calculate renewal date (1 year from now)
   const renewalDate = new Date();
   renewalDate.setFullYear(renewalDate.getFullYear() + 1);
   const renewalDateStr = renewalDate.toLocaleDateString('en-GB', {
@@ -27,7 +26,6 @@ export function SignupDonePage() {
   });
 
   function handleLoginNow() {
-    // In production, this would trigger a magic link send
     window.location.href = '/';
   }
 
@@ -46,14 +44,12 @@ export function SignupDonePage() {
       }
     >
       <div className="space-y-8">
-        {/* Success Icon */}
         <div className="flex justify-center">
           <div className="flex items-center justify-center size-20 rounded-full bg-primary/10">
             <CheckCircle2 className="size-10 text-primary" />
           </div>
         </div>
 
-        {/* Header */}
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold tracking-tight">
             You're a Heat Plex Member
@@ -63,7 +59,6 @@ export function SignupDonePage() {
           </p>
         </div>
 
-        {/* Membership Details */}
         <div className="space-y-4">
           <div className="space-y-1">
             <h3 className="text-lg font-semibold">Your Membership</h3>
@@ -87,7 +82,6 @@ export function SignupDonePage() {
           </div>
         </div>
 
-        {/* Next Steps */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">What's next?</h3>
 
@@ -99,7 +93,9 @@ export function SignupDonePage() {
               <div>
                 <p className="font-medium">Check your email</p>
                 <p className="text-sm text-muted-foreground">
-                  We've sent your welcome email to {email}
+                  {email
+                    ? `We've sent your welcome email to ${email}`
+                    : 'Check your inbox for your welcome email'}
                 </p>
               </div>
             </div>
@@ -130,7 +126,6 @@ export function SignupDonePage() {
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex flex-col gap-3 pt-4">
           <Button
             onClick={handleLoginNow}
@@ -144,7 +139,6 @@ export function SignupDonePage() {
           </p>
         </div>
 
-        {/* Support */}
         <div className="pt-4 border-t">
           <p className="text-sm text-muted-foreground">
             Questions? Call us on{' '}

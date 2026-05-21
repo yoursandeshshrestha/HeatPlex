@@ -12,6 +12,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { LoadingScreen } from '@/components/ui/loading-screen';
 import { CreditCard, Shield, Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { savePendingSignup } from '@/lib/signup/pending-signup';
 
 export function SignupPaymentPage() {
   const navigate = useNavigate();
@@ -34,36 +35,33 @@ export function SignupPaymentPage() {
       const lastName = searchParams.get('lastName') || '';
 
       // 1. Create GoCardless billing request
-      const { data: supabaseData } = await supabase.auth.getSession();
       const redirectUri = `${window.location.origin}/join/confirm`;
 
-      const gcResponse = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-signup`,
+      const { data: signupData, error: signupError } = await supabase.functions.invoke(
+        'create-signup',
         {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-          body: JSON.stringify({
+          body: {
             email: email.toLowerCase(),
             firstName,
             lastName,
             plan,
             redirectUri,
-          }),
+          },
         }
       );
 
-      if (!gcResponse.ok) {
-        const error = await gcResponse.json();
-        setError(error.error || 'Failed to create payment request');
+      if (signupError) {
+        setError(signupError.message || 'Failed to create payment request');
         setLoading(false);
         return;
       }
 
-      const { customerId, billingRequestId, authorizationUrl } = await gcResponse.json();
+      const { customerId, billingRequestId, authorizationUrl } = signupData ?? {};
+      if (!authorizationUrl) {
+        setError(signupData?.error || 'Failed to create payment request');
+        setLoading(false);
+        return;
+      }
 
       // 2. Create Supabase auth user (for login)
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -103,6 +101,7 @@ export function SignupPaymentPage() {
           status: 'pending',
           terms_accepted_at: new Date().toISOString(),
           gocardless_customer_id: customerId,
+          gocardless_billing_request_id: billingRequestId,
           started_at: new Date().toISOString(),
           renewal_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
         })
@@ -114,6 +113,14 @@ export function SignupPaymentPage() {
         setLoading(false);
         return;
       }
+
+      savePendingSignup({
+        memberId: member.id,
+        email: email.toLowerCase(),
+        firstName,
+        plan,
+        billingRequestId,
+      });
 
       // 4. Redirect to GoCardless authorization page
       window.location.href = authorizationUrl;
