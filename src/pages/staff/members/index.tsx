@@ -4,17 +4,21 @@
  */
 
 import { useState, useEffect, startTransition } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import type { Tables } from '@/lib/supabase';
 import { LoadingScreen } from '@/components/ui/loading-screen';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import { StatsCards } from './components/StatsCards';
 import { MembersTable } from './components/MembersTable';
+import { CreateMemberDialog } from './components/CreateMemberDialog';
 
 type Member = Tables<'members'>;
 
 export function MembersPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [members, setMembers] = useState<Member[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [stats, setStats] = useState({
@@ -25,6 +29,7 @@ export function MembersPage() {
   });
   const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '10');
@@ -104,6 +109,12 @@ export function MembersPage() {
     }
   }
 
+  function handleMemberCreated(member: Member) {
+    loadMembers();
+    loadStats();
+    navigate(`/staff/members/${member.id}`);
+  }
+
   if (initialLoading) {
     return <LoadingScreen message="Loading members..." />;
   }
@@ -111,12 +122,24 @@ export function MembersPage() {
   return (
     <div className="space-y-4 p-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Members</h1>
-        <p className="text-muted-foreground">
-          Manage and view all Heat Plex members
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Members</h1>
+          <p className="text-muted-foreground">
+            Manage and view all Heat Plex members
+          </p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)} className="cursor-pointer shrink-0">
+          <Plus className="mr-2 h-4 w-4" />
+          Add member
+        </Button>
       </div>
+
+      <CreateMemberDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={handleMemberCreated}
+      />
 
       {/* Stats */}
       <StatsCards stats={stats} />

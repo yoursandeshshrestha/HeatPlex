@@ -1,6 +1,7 @@
-import { useSearchParams } from 'react-router-dom';
-import { useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useCallback, useState } from 'react';
 import type { Tables } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,8 @@ import {
 } from '@/components/ui/table';
 import { Search, Download, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { formatDate } from '@/lib/date-utils';
+import { downloadCsv, toCsv } from '@/lib/csv-utils';
+import { toast } from 'sonner';
 
 type Member = Tables<'members'>;
 
@@ -33,6 +36,8 @@ interface MembersTableProps {
 
 export function MembersTable({ members, totalCount, loading }: MembersTableProps) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [exporting, setExporting] = useState(false);
 
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '10');
@@ -68,6 +73,75 @@ export function MembersTable({ members, totalCount, loading }: MembersTableProps
     setSearchParams(new URLSearchParams({ page: '1', limit: limit.toString() }));
   }, [setSearchParams, limit]);
 
+  const handleExport = useCallback(async () => {
+    try {
+      setExporting(true);
+
+      let query = supabase
+        .from('members')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (search) {
+        query = query.or(
+          `email.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`
+        );
+      }
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+      if (planFilter !== 'all') {
+        query = query.eq('plan', planFilter);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      if (!data?.length) {
+        toast.error('No members to export');
+        return;
+      }
+
+      const headers = [
+        'ID',
+        'First Name',
+        'Last Name',
+        'Email',
+        'Phone',
+        'Plan',
+        'Status',
+        'Member Since',
+        'Renewal Date',
+        'Savings (£)',
+        'Postcode',
+      ];
+
+      const rows = data.map((member) => [
+        member.id,
+        member.first_name,
+        member.last_name,
+        member.email,
+        member.phone,
+        member.plan,
+        member.status.replace(/_/g, ' '),
+        member.started_at ? formatDate(member.started_at) : '',
+        member.renewal_date ? formatDate(member.renewal_date) : '',
+        ((member.savings_total_pence || 0) / 100).toFixed(2),
+        member.address_postcode,
+      ]);
+
+      const date = new Date().toISOString().slice(0, 10);
+      downloadCsv(`heatplex-members-${date}.csv`, toCsv(headers, rows));
+      toast.success(`Exported ${data.length} member${data.length === 1 ? '' : 's'}`);
+    } catch (error) {
+      console.error('Error exporting members:', error);
+      toast.error('Failed to export members');
+    } finally {
+      setExporting(false);
+    }
+  }, [search, statusFilter, planFilter]);
+
   const statusStyles = {
     active: 'bg-emerald-500/10 text-emerald-400 backdrop-blur-sm hover:bg-emerald-500/15',
     payment_overdue: 'bg-red-500/10 text-red-400 backdrop-blur-sm hover:bg-red-500/15',
@@ -81,9 +155,13 @@ export function MembersTable({ members, totalCount, loading }: MembersTableProps
           <div className="text-sm font-medium">
             All Members ({totalCount})
           </div>
-          <Button className="cursor-pointer">
+          <Button
+            className="cursor-pointer"
+            onClick={handleExport}
+            disabled={exporting || totalCount === 0}
+          >
             <Download className="mr-2 h-4 w-4" />
-            Export
+            {exporting ? 'Exporting…' : 'Export CSV'}
           </Button>
         </div>
         <div className="flex items-center gap-2">
@@ -188,7 +266,11 @@ export function MembersTable({ members, totalCount, loading }: MembersTableProps
               </TableRow>
             ) : (
               members.map((member) => (
-                <TableRow key={member.id} className="cursor-pointer">
+                <TableRow
+                  key={member.id}
+                  className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => navigate(`/staff/members/${member.id}`)}
+                >
                   <TableCell className="font-medium">
                     {member.first_name} {member.last_name}
                   </TableCell>
@@ -214,7 +296,15 @@ export function MembersTable({ members, totalCount, loading }: MembersTableProps
                     £{((member.savings_total_pence || 0) / 100).toFixed(2)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" className="h-8 cursor-pointer hover:bg-accent">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 cursor-pointer hover:bg-accent"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/staff/members/${member.id}`);
+                      }}
+                    >
                       View
                     </Button>
                   </TableCell>
