@@ -2,8 +2,10 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { MemberLayout } from '@/components/layout/MemberLayout';
+import { PendingPaymentGate } from '@/components/auth/PendingPaymentGate';
 import { DashboardPage as StaffDashboardPage } from '@/pages/staff/dashboard';
 import { MembersPage } from '@/pages/staff/members';
+import { MemberDetailPage } from '@/pages/staff/members/detail';
 import { EngineersPage } from '@/pages/staff/engineers';
 import { BookingsPage } from '@/pages/staff/bookings';
 import { StaffPage } from '@/pages/staff/team';
@@ -15,6 +17,7 @@ import { BillingPage } from '@/pages/members/billing';
 import { JobsPage } from '@/pages/members/jobs';
 import { CertificatesPage } from '@/pages/members/certificates';
 import { CancelPage } from '@/pages/members/cancel';
+import { CompletePaymentPage } from '@/pages/members/complete-payment';
 import { LoginPage } from '@/pages/common/auth/LoginPage';
 import { VerifyPage } from '@/pages/common/auth/VerifyPage';
 import { SignupPlanPage } from '@/pages/common/signup/plan';
@@ -44,6 +47,16 @@ function ProtectedRoute({ children, allowedUserType }: { children: React.ReactNo
   }
 
   return <>{children}</>;
+}
+
+function MemberPortalRoute({ children }: { children: React.ReactNode }) {
+  return (
+    <ProtectedRoute allowedUserType="member">
+      <PendingPaymentGate>
+        <MemberLayout>{children}</MemberLayout>
+      </PendingPaymentGate>
+    </ProtectedRoute>
+  );
 }
 
 // Auto-redirect to correct dashboard after login
@@ -85,85 +98,21 @@ function AppRoutes() {
 
       {/* Member routes */}
       <Route
-        path="/member"
+        path="/member/complete-payment"
         element={
           <ProtectedRoute allowedUserType="member">
-            <MemberLayout>
-              <MemberDashboardPage />
-            </MemberLayout>
+            <CompletePaymentPage />
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/member/profile"
-        element={
-          <ProtectedRoute allowedUserType="member">
-            <MemberLayout>
-              <MemberProfilePage />
-            </MemberLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/member/membership"
-        element={
-          <ProtectedRoute allowedUserType="member">
-            <MemberLayout>
-              <MemberMembershipPage />
-            </MemberLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/member/services"
-        element={
-          <ProtectedRoute allowedUserType="member">
-            <MemberLayout>
-              <MemberServicesPage />
-            </MemberLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/member/billing"
-        element={
-          <ProtectedRoute allowedUserType="member">
-            <MemberLayout>
-              <BillingPage />
-            </MemberLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/member/jobs"
-        element={
-          <ProtectedRoute allowedUserType="member">
-            <MemberLayout>
-              <JobsPage />
-            </MemberLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/member/certificates"
-        element={
-          <ProtectedRoute allowedUserType="member">
-            <MemberLayout>
-              <CertificatesPage />
-            </MemberLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/member/cancel"
-        element={
-          <ProtectedRoute allowedUserType="member">
-            <MemberLayout>
-              <CancelPage />
-            </MemberLayout>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/member" element={<MemberPortalRoute><MemberDashboardPage /></MemberPortalRoute>} />
+      <Route path="/member/profile" element={<MemberPortalRoute><MemberProfilePage /></MemberPortalRoute>} />
+      <Route path="/member/membership" element={<MemberPortalRoute><MemberMembershipPage /></MemberPortalRoute>} />
+      <Route path="/member/services" element={<MemberPortalRoute><MemberServicesPage /></MemberPortalRoute>} />
+      <Route path="/member/billing" element={<MemberPortalRoute><BillingPage /></MemberPortalRoute>} />
+      <Route path="/member/jobs" element={<MemberPortalRoute><JobsPage /></MemberPortalRoute>} />
+      <Route path="/member/certificates" element={<MemberPortalRoute><CertificatesPage /></MemberPortalRoute>} />
+      <Route path="/member/cancel" element={<MemberPortalRoute><CancelPage /></MemberPortalRoute>} />
 
       {/* Staff routes */}
       <Route
@@ -182,6 +131,16 @@ function AppRoutes() {
           <ProtectedRoute allowedUserType="staff">
             <DashboardLayout>
               <MembersPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/members/:id"
+        element={
+          <ProtectedRoute allowedUserType="staff">
+            <DashboardLayout>
+              <MemberDetailPage />
             </DashboardLayout>
           </ProtectedRoute>
         }
