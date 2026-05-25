@@ -3,6 +3,7 @@
  * Plan, billing, and membership management
  */
 
+import { Link } from 'react-router-dom';
 import type { Tables } from '@/lib/supabase';
 import { formatDate } from '@/lib/date-utils';
 import { Button } from '@/components/ui/button';
@@ -68,9 +69,14 @@ export function MembershipTab({ member }: MembershipTabProps) {
         )}
 
         {member.status === 'pending' && (
-          <div className="mt-4 flex items-start gap-2 text-sm text-amber-400">
-            <AlertCircle className="mt-0.5 size-4 shrink-0" />
-            <span>Your membership is pending payment confirmation.</span>
+          <div className="mt-4 space-y-3">
+            <div className="flex items-start gap-2 text-sm text-amber-400">
+              <AlertCircle className="mt-0.5 size-4 shrink-0" />
+              <span>Your membership is pending payment confirmation.</span>
+            </div>
+            <Button asChild className="cursor-pointer">
+              <Link to="/member/complete-payment">Complete payment setup →</Link>
+            </Button>
           </div>
         )}
 

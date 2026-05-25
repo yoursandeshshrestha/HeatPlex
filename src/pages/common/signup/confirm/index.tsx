@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { SignupLayout } from '../components/SignupLayout';
 import { LoadingScreen } from '@/components/ui/loading-screen';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -26,6 +27,7 @@ type ConfirmedMember = {
 
 export function SignupConfirmPage() {
   const navigate = useNavigate();
+  const { refreshSession } = useAuth();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const handledRef = useRef(false);
@@ -36,7 +38,17 @@ export function SignupConfirmPage() {
     handleConfirmation();
   }, []);
 
-  function navigateToDone(member: ConfirmedMember) {
+  async function afterPaymentSuccess(member: ConfirmedMember) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session?.user.email) {
+      await refreshSession();
+      navigate('/member?payment=complete', { replace: true });
+      return;
+    }
+
     const doneParams = new URLSearchParams({
       email: member.email,
       firstName: member.firstName || '',
@@ -148,7 +160,7 @@ export function SignupConfirmPage() {
         if (!member) return;
 
         clearPendingSignup();
-        navigateToDone(member);
+        await afterPaymentSuccess(member);
         void sendWelcomeEmail(member);
         return;
       } catch (err) {
@@ -168,7 +180,7 @@ export function SignupConfirmPage() {
 
     if (sessionMember?.status === 'active') {
       clearPendingSignup();
-      navigateToDone({
+      await afterPaymentSuccess({
         email: sessionMember.email,
         firstName: sessionMember.first_name,
         plan: sessionMember.plan,
@@ -197,7 +209,7 @@ export function SignupConfirmPage() {
       if (!member) return;
 
       clearPendingSignup();
-      navigateToDone(member);
+      await afterPaymentSuccess(member);
       void sendWelcomeEmail(member);
     } catch (err) {
       console.error('Confirmation error:', err);
@@ -223,7 +235,7 @@ export function SignupConfirmPage() {
               <Link to="/member">Go to dashboard</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link to="/join/payment">Try payment again</Link>
+              <Link to="/member/complete-payment">Complete payment</Link>
             </Button>
           </div>
         </div>
@@ -239,7 +251,7 @@ export function SignupConfirmPage() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
           <Button variant="outline" asChild className="w-full">
-            <Link to="/join/payment">Back to payment</Link>
+            <Link to="/member/complete-payment">Try payment again</Link>
           </Button>
         </div>
       </div>
