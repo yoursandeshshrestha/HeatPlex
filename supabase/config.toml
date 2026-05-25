@@ -43,6 +43,14 @@ enable_confirmations = false
 [functions.create-signup]
 verify_jwt = false
 
+# Auth is enforced inside the function (staff JWT + staff table check).
+# verify_jwt uses legacy gateway validation and often 401s with user session JWTs / ES256 keys.
+[functions.create-member]
+verify_jwt = false
+
+[functions.start-member-payment]
+verify_jwt = false
+
 [functions.complete-signup]
 verify_jwt = false
 
