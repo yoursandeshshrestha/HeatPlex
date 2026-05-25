@@ -54,6 +54,22 @@ else
     echo -e "${YELLOW}⚠ complete-signup deployment failed${NC}"
 fi
 
+echo "Deploying create-member..."
+npx supabase functions deploy create-member
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ create-member deployed${NC}"
+else
+    echo -e "${YELLOW}⚠ create-member deployment failed${NC}"
+fi
+
+echo "Deploying start-member-payment..."
+npx supabase functions deploy start-member-payment
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ start-member-payment deployed${NC}"
+else
+    echo -e "${YELLOW}⚠ start-member-payment deployment failed${NC}"
+fi
+
 echo "Deploying send-email..."
 npx supabase functions deploy send-email
 if [ $? -eq 0 ]; then
