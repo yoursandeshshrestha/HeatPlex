@@ -133,3 +133,46 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_recalculate_savings AFTER INSERT ON savings_events
     FOR EACH ROW EXECUTE FUNCTION recalculate_member_savings();
+
+-- =============================================================================
+-- BOOKING REMINDERS
+-- =============================================================================
+-- Tracks which bookings have already had a reminder email sent, and exposes a
+-- view of bookings scheduled for tomorrow that still need one. The actual send
+-- is triggered by an edge function / scheduled job that reads the view.
+
+CREATE TABLE booking_reminder_sent (
+    booking_id UUID PRIMARY KEY REFERENCES bookings(id) ON DELETE CASCADE,
+    sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_booking_reminder_sent_booking_id ON booking_reminder_sent(booking_id);
+
+GRANT ALL ON booking_reminder_sent TO authenticated;
+GRANT ALL ON booking_reminder_sent TO service_role;
+
+CREATE OR REPLACE VIEW bookings_needing_reminders AS
+SELECT
+    b.id AS booking_id,
+    b.scheduled_date,
+    b.slot,
+    b.status,
+    m.id AS member_id,
+    m.email,
+    m.first_name,
+    m.address_line_1,
+    m.address_line_2,
+    m.address_town,
+    m.address_postcode
+FROM bookings b
+JOIN members m ON m.id = b.member_id
+WHERE b.status IN ('booked', 'rescheduled')
+    AND b.scheduled_date = (CURRENT_DATE + INTERVAL '1 day')::date
+    AND NOT EXISTS (
+        SELECT 1 FROM booking_reminder_sent
+        WHERE booking_id = b.id
+    );
+
+GRANT SELECT ON bookings_needing_reminders TO service_role;
+
+COMMENT ON VIEW bookings_needing_reminders IS 'Bookings scheduled for tomorrow that haven''t received a reminder email yet';

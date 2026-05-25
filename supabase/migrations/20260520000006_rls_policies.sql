@@ -60,10 +60,22 @@ CREATE POLICY "Members can read own profile"
         OR auth.email() IS NULL -- Allow unauthenticated reads for login check
     );
 
+-- MEMBERS: Authenticated users can read their own record by JWT email claim
+CREATE POLICY "Members can read own record"
+    ON members FOR SELECT
+    TO authenticated
+    USING (email = auth.jwt()->>'email');
+
 -- MEMBERS: Can update own profile, staff can update all
 CREATE POLICY "Members can update own profile"
     ON members FOR UPDATE
     USING (email = auth.email() OR is_staff());
+
+-- MEMBERS: Public signup - anon and authenticated users can create new member rows
+CREATE POLICY "Allow public signup"
+    ON members FOR INSERT
+    TO anon, authenticated
+    WITH CHECK (true);
 
 -- STAFF: Only staff can read staff data
 CREATE POLICY "Staff can read staff data"

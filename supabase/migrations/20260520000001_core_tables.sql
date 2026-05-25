@@ -40,6 +40,13 @@ CREATE TABLE members (
     engineer_credit_id UUID,
     promo_code TEXT,
 
+    -- GoCardless identifiers (mirrored from payment tables for quick lookups)
+    gocardless_customer_id TEXT,
+    gocardless_mandate_id TEXT,
+    gocardless_subscription_id TEXT,
+    gocardless_payment_id TEXT,
+    gocardless_billing_request_id TEXT,
+
     -- Marketing
     marketing_email_opt_in BOOLEAN DEFAULT FALSE,
     marketing_consent_at TIMESTAMPTZ,
@@ -60,6 +67,11 @@ CREATE INDEX idx_members_phone ON members(phone);
 CREATE INDEX idx_members_commusoft_id ON members(commusoft_customer_id);
 CREATE INDEX idx_members_status ON members(status);
 CREATE INDEX idx_members_renewal_date ON members(renewal_date) WHERE status = 'active';
+CREATE INDEX idx_members_gocardless_customer ON members(gocardless_customer_id);
+CREATE INDEX idx_members_gocardless_mandate ON members(gocardless_mandate_id);
+CREATE INDEX idx_members_gocardless_subscription ON members(gocardless_subscription_id);
+CREATE INDEX idx_members_gocardless_payment ON members(gocardless_payment_id);
+CREATE INDEX idx_members_gocardless_billing_request ON members(gocardless_billing_request_id);
 
 -- Staff table
 CREATE TABLE staff (
