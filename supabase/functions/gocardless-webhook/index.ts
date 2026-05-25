@@ -6,6 +6,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { createHmac } from 'https://deno.land/std@0.168.0/node/crypto.ts';
+import { activationDates } from '../_shared/membership.ts';
 
 const WEBHOOK_SECRET = Deno.env.get('GOCARDLESS_WEBHOOK_SECRET')!;
 const GOCARDLESS_ACCESS_TOKEN = Deno.env.get('GOCARDLESS_ACCESS_TOKEN')!;
@@ -207,7 +208,30 @@ async function handleSubscriptionFinished(event: WebhookEvent) {
 }
 
 async function handleBillingRequestFulfilled(event: WebhookEvent) {
+  let lookup = supabase.from('members').select('id, plan, status');
+
+  if (event.links.billing_request) {
+    lookup = lookup.eq('gocardless_billing_request_id', event.links.billing_request);
+  } else if (event.links.customer) {
+    lookup = lookup.eq('gocardless_customer_id', event.links.customer);
+  } else {
+    console.error('billing_requests.fulfilled missing billing_request and customer links');
+    return;
+  }
+
+  const { data: member, error: lookupError } = await lookup.maybeSingle();
+  if (lookupError || !member) {
+    console.error('Member not found for billing_requests.fulfilled:', lookupError);
+    return;
+  }
+
   const updates: Record<string, string> = { status: 'active' };
+
+  if (member.status !== 'active') {
+    const dates = activationDates(member.plan as 'annual' | 'monthly');
+    updates.started_at = dates.started_at;
+    updates.renewal_date = dates.renewal_date;
+  }
 
   if (event.links.billing_request) {
     const ids = await fetchBillingRequestResourceIds(event.links.billing_request);
@@ -218,18 +242,7 @@ async function handleBillingRequestFulfilled(event: WebhookEvent) {
     updates.gocardless_mandate_id = event.links.mandate;
   }
 
-  let query = supabase.from('members').update(updates);
-
-  if (event.links.billing_request) {
-    query = query.eq('gocardless_billing_request_id', event.links.billing_request);
-  } else if (event.links.customer) {
-    query = query.eq('gocardless_customer_id', event.links.customer);
-  } else {
-    console.error('billing_requests.fulfilled missing billing_request and customer links');
-    return;
-  }
-
-  const { error } = await query;
+  const { error } = await supabase.from('members').update(updates).eq('id', member.id);
 
   if (error) {
     console.error('Error activating member after billing request:', error);

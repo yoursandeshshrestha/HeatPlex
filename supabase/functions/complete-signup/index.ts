@@ -5,6 +5,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { activationDates } from '../_shared/membership.ts';
 
 const GOCARDLESS_ACCESS_TOKEN = Deno.env.get('GOCARDLESS_ACCESS_TOKEN')!;
 const GOCARDLESS_ENVIRONMENT = Deno.env.get('GOCARDLESS_ENVIRONMENT') || 'sandbox';
@@ -171,7 +172,13 @@ serve(async (req) => {
     const { mandateId, paymentId, subscriptionId } =
       extractBillingRequestResourceIds(billingRequest);
 
-    const updates: Record<string, string> = { status: 'active' };
+    const plan = member.plan as 'annual' | 'monthly';
+    const dates = activationDates(plan);
+    const updates: Record<string, string> = {
+      status: 'active',
+      started_at: dates.started_at,
+      renewal_date: dates.renewal_date,
+    };
     if (mandateId) updates.gocardless_mandate_id = mandateId;
     if (paymentId) updates.gocardless_payment_id = paymentId;
     if (subscriptionId) updates.gocardless_subscription_id = subscriptionId;
