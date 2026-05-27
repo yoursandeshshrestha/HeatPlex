@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 interface LogoutButtonProps {
   variant?: 'default' | 'outline' | 'ghost' | 'destructive';
@@ -23,21 +23,14 @@ export function LogoutButton({
   className
 }: LogoutButtonProps) {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   async function handleSignOut() {
     setLoading(true);
     try {
       await signOut();
-
-      // Verify session is cleared before redirecting
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.href = '/';
-      } else {
-        console.error('Session still exists after signout');
-        setLoading(false);
-      }
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Sign out error:', error);
       setLoading(false);

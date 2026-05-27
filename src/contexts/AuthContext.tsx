@@ -63,12 +63,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Check if user is a member
-      const { data: member } = await supabase
-        .from('members')
-        .select('*')
-        .eq('email', email)
-        .single();
+      const [{ data: member }, { data: staff }] = await Promise.all([
+        supabase.from('members').select('*').eq('email', email).maybeSingle(),
+        supabase.from('staff').select('*').eq('email', email).maybeSingle(),
+      ]);
 
       if (member) {
         setState({
@@ -79,13 +77,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         return;
       }
-
-      // Check if user is staff
-      const { data: staff } = await supabase
-        .from('staff')
-        .select('*')
-        .eq('email', email)
-        .single();
 
       if (staff) {
         setState({
