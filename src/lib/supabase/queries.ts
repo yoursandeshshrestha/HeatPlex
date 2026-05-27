@@ -567,7 +567,7 @@ export async function getOperationalKPIs(dateRange: DateRangeFilter): Promise<Op
   };
 }
 
-export async function getTopEngineers(dateRange: DateRangeFilter, limit = 3): Promise<EngineerStats[]> {
+export async function getTopEngineers(_dateRange: DateRangeFilter, limit = 3): Promise<EngineerStats[]> {
   // This would need a more complex query joining engineers, jobs, and member attributions
   // For now, return placeholder data
   const engineers = await getAllEngineers();
@@ -575,7 +575,7 @@ export async function getTopEngineers(dateRange: DateRangeFilter, limit = 3): Pr
   return engineers.slice(0, limit).map((engineer, index) => ({
     id: engineer.id,
     name: engineer.name,
-    slug: engineer.slug,
+    slug: engineer.slug ?? '',
     jobsCompleted: 25 - (index * 5),
     membershipsOffered: 20 - (index * 4),
     membershipsSold: 3 - index,

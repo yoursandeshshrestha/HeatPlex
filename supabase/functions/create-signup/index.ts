@@ -4,9 +4,13 @@
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { activationDates } from '../_shared/membership.ts';
 
 const GOCARDLESS_ACCESS_TOKEN = Deno.env.get('GOCARDLESS_ACCESS_TOKEN')!;
 const GOCARDLESS_ENVIRONMENT = Deno.env.get('GOCARDLESS_ENVIRONMENT') || 'sandbox';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const API_BASE_URL = GOCARDLESS_ENVIRONMENT === 'live'
   ? 'https://api.gocardless.com'
@@ -18,6 +22,13 @@ interface SignupRequest {
   lastName: string;
   plan: 'annual' | 'monthly';
   redirectUri: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string | null;
+  town: string;
+  postcode: string;
+  promoCode?: string | null;
+  marketingOptIn?: boolean;
 }
 
 const corsHeaders = {
@@ -40,10 +51,33 @@ serve(async (req) => {
 
   try {
     const body: SignupRequest = await req.json();
-    const { email, firstName, lastName, plan, redirectUri } = body;
+    const {
+      email,
+      firstName,
+      lastName,
+      plan,
+      redirectUri,
+      phone,
+      addressLine1,
+      addressLine2,
+      town,
+      postcode,
+      promoCode,
+      marketingOptIn,
+    } = body;
 
     // Validate required fields
-    if (!email || !firstName || !lastName || !plan || !redirectUri) {
+    if (
+      !email ||
+      !firstName ||
+      !lastName ||
+      !plan ||
+      !redirectUri ||
+      !phone ||
+      !addressLine1 ||
+      !town ||
+      !postcode
+    ) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         {
@@ -158,9 +192,72 @@ serve(async (req) => {
 
     const flowData = await flowResponse.json();
 
+    // Create pending member row (service role; bypasses RLS)
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const { data: existingMember, error: existsError } = await supabase
+      .from('members')
+      .select('id')
+      .eq('email', normalizedEmail)
+      .maybeSingle();
+
+    if (existsError) {
+      console.error('Member exists check error:', existsError);
+      return new Response(JSON.stringify({ error: 'Failed to create membership' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (existingMember) {
+      return new Response(JSON.stringify({ error: 'A member with this email already exists' }), {
+        status: 409,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const dates = activationDates(plan);
+    const termsAcceptedAt = new Date().toISOString();
+
+    const { data: member, error: memberError } = await supabase
+      .from('members')
+      .insert({
+        first_name: firstName,
+        last_name: lastName,
+        email: normalizedEmail,
+        phone,
+        address_line_1: addressLine1,
+        address_line_2: addressLine2 || null,
+        address_town: town,
+        address_postcode: postcode,
+        plan,
+        promo_code: promoCode || null,
+        marketing_email_opt_in: Boolean(marketingOptIn),
+        marketing_consent_at: marketingOptIn ? termsAcceptedAt : null,
+        status: 'pending',
+        terms_accepted_at: termsAcceptedAt,
+        gocardless_customer_id: customerId,
+        gocardless_billing_request_id: billingRequestId,
+        started_at: dates.started_at,
+        renewal_date: dates.renewal_date,
+      })
+      .select('id')
+      .single();
+
+    if (memberError || !member) {
+      console.error('Create pending member error:', memberError);
+      return new Response(JSON.stringify({ error: 'Failed to create membership' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
+        memberId: member.id,
         customerId,
         billingRequestId,
         authorizationUrl: flowData.billing_request_flows.authorisation_url,

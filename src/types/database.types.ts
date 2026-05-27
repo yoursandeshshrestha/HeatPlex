@@ -671,6 +671,11 @@ export type Database = {
           email: string
           engineer_credit_id: string | null
           first_name: string
+          gocardless_billing_request_id: string | null
+          gocardless_customer_id: string | null
+          gocardless_mandate_id: string | null
+          gocardless_payment_id: string | null
+          gocardless_subscription_id: string | null
           id: string
           last_name: string
           marketing_consent_at: string | null
@@ -702,6 +707,11 @@ export type Database = {
           email: string
           engineer_credit_id?: string | null
           first_name: string
+          gocardless_billing_request_id?: string | null
+          gocardless_customer_id?: string | null
+          gocardless_mandate_id?: string | null
+          gocardless_payment_id?: string | null
+          gocardless_subscription_id?: string | null
           id?: string
           last_name: string
           marketing_consent_at?: string | null
@@ -733,6 +743,11 @@ export type Database = {
           email?: string
           engineer_credit_id?: string | null
           first_name?: string
+          gocardless_billing_request_id?: string | null
+          gocardless_customer_id?: string | null
+          gocardless_mandate_id?: string | null
+          gocardless_payment_id?: string | null
+          gocardless_subscription_id?: string | null
           id?: string
           last_name?: string
           marketing_consent_at?: string | null
@@ -959,13 +974,16 @@ export type Database = {
           clicked_at: string | null
           complained_at: string | null
           created_at: string | null
+          error_message: string | null
           id: string
           member_id: string | null
           opened_at: string | null
           provider_message_id: string | null
           sent_at: string
           status: string | null
+          subject: string | null
           template_key: string | null
+          to_email: string
         }
         Insert: {
           bounced_at?: string | null
@@ -973,13 +991,16 @@ export type Database = {
           clicked_at?: string | null
           complained_at?: string | null
           created_at?: string | null
+          error_message?: string | null
           id?: string
           member_id?: string | null
           opened_at?: string | null
           provider_message_id?: string | null
           sent_at?: string
           status?: string | null
+          subject?: string | null
           template_key?: string | null
+          to_email?: string
         }
         Update: {
           bounced_at?: string | null
@@ -987,13 +1008,16 @@ export type Database = {
           clicked_at?: string | null
           complained_at?: string | null
           created_at?: string | null
+          error_message?: string | null
           id?: string
           member_id?: string | null
           opened_at?: string | null
           provider_message_id?: string | null
           sent_at?: string
           status?: string | null
+          subject?: string | null
           template_key?: string | null
+          to_email?: string
         }
         Relationships: [
           {
@@ -1385,7 +1409,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      append_audit_log: {
+        Args: {
+          p_action_type: string
+          p_target_type: string
+          p_target_id: string
+          p_summary: string
+          p_before?: Json | null
+          p_after?: Json | null
+        }
+        Returns: undefined
+      }
+      staff_delete_member: {
+        Args: { target_member_id: string }
+        Returns: undefined
+      }
+      staff_delete_staff: {
+        Args: { target_staff_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
