@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { MemberLayout } from '@/components/layout/MemberLayout';
@@ -50,12 +50,24 @@ function ProtectedRoute({ children, allowedUserType }: { children: React.ReactNo
   return <>{children}</>;
 }
 
-function MemberPortalRoute({ children }: { children: React.ReactNode }) {
+function MemberPortalLayout() {
   return (
     <ProtectedRoute allowedUserType="member">
       <PendingPaymentGate>
-        <MemberLayout>{children}</MemberLayout>
+        <MemberLayout>
+          <Outlet />
+        </MemberLayout>
       </PendingPaymentGate>
+    </ProtectedRoute>
+  );
+}
+
+function StaffLayout() {
+  return (
+    <ProtectedRoute allowedUserType="staff">
+      <DashboardLayout>
+        <Outlet />
+      </DashboardLayout>
     </ProtectedRoute>
   );
 }
@@ -106,86 +118,27 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route path="/member" element={<MemberPortalRoute><MemberDashboardPage /></MemberPortalRoute>} />
-      <Route path="/member/profile" element={<MemberPortalRoute><MemberProfilePage /></MemberPortalRoute>} />
-      <Route path="/member/membership" element={<MemberPortalRoute><MemberMembershipPage /></MemberPortalRoute>} />
-      <Route path="/member/services" element={<MemberPortalRoute><MemberServicesPage /></MemberPortalRoute>} />
-      <Route path="/member/billing" element={<MemberPortalRoute><BillingPage /></MemberPortalRoute>} />
-      <Route path="/member/jobs" element={<MemberPortalRoute><JobsPage /></MemberPortalRoute>} />
-      <Route path="/member/certificates" element={<MemberPortalRoute><CertificatesPage /></MemberPortalRoute>} />
-      <Route path="/member/cancel" element={<MemberPortalRoute><CancelPage /></MemberPortalRoute>} />
+      <Route path="/member" element={<MemberPortalLayout />}>
+        <Route index element={<MemberDashboardPage />} />
+        <Route path="profile" element={<MemberProfilePage />} />
+        <Route path="membership" element={<MemberMembershipPage />} />
+        <Route path="services" element={<MemberServicesPage />} />
+        <Route path="billing" element={<BillingPage />} />
+        <Route path="jobs" element={<JobsPage />} />
+        <Route path="certificates" element={<CertificatesPage />} />
+        <Route path="cancel" element={<CancelPage />} />
+      </Route>
 
-      {/* Staff routes */}
-      <Route
-        path="/staff"
-        element={
-          <ProtectedRoute allowedUserType="staff">
-            <DashboardLayout>
-              <StaffDashboardPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/staff/members"
-        element={
-          <ProtectedRoute allowedUserType="staff">
-            <DashboardLayout>
-              <MembersPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/staff/members/:id"
-        element={
-          <ProtectedRoute allowedUserType="staff">
-            <DashboardLayout>
-              <MemberDetailPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/staff/engineers"
-        element={
-          <ProtectedRoute allowedUserType="staff">
-            <DashboardLayout>
-              <EngineersPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/staff/bookings"
-        element={
-          <ProtectedRoute allowedUserType="staff">
-            <DashboardLayout>
-              <BookingsPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/staff/emails"
-        element={
-          <ProtectedRoute allowedUserType="staff">
-            <DashboardLayout>
-              <EmailLogsPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/staff/team"
-        element={
-          <ProtectedRoute allowedUserType="staff">
-            <DashboardLayout>
-              <StaffPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        }
-      />
+      {/* Staff routes — single auth gate + layout */}
+      <Route path="/staff" element={<StaffLayout />}>
+        <Route index element={<StaffDashboardPage />} />
+        <Route path="members" element={<MembersPage />} />
+        <Route path="members/:id" element={<MemberDetailPage />} />
+        <Route path="engineers" element={<EngineersPage />} />
+        <Route path="bookings" element={<BookingsPage />} />
+        <Route path="emails" element={<EmailLogsPage />} />
+        <Route path="team" element={<StaffPage />} />
+      </Route>
 
       {/* Catch-all redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />
