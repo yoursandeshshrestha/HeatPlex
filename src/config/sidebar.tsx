@@ -9,6 +9,7 @@ import {
   FileText,
   Settings,
   UserCog,
+  Mail,
 } from 'lucide-react'
 
 interface NavItem {
@@ -57,6 +58,11 @@ export const sidebarConfig: NavGroup[] = [
         title: 'Commissions',
         href: '/staff/commissions',
         icon: <DollarSign className="size-4 shrink-0" />,
+      },
+      {
+        title: 'Email Logs',
+        href: '/staff/emails',
+        icon: <Mail className="size-4 shrink-0" />,
       },
     ],
   },

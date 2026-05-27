@@ -8,6 +8,7 @@ import { MembersPage } from '@/pages/staff/members';
 import { MemberDetailPage } from '@/pages/staff/members/detail';
 import { EngineersPage } from '@/pages/staff/engineers';
 import { BookingsPage } from '@/pages/staff/bookings';
+import { EmailLogsPage } from '@/pages/staff/emails';
 import { StaffPage } from '@/pages/staff/team';
 import { MemberDashboardPage } from '@/pages/members/dashboard';
 import { MemberProfilePage } from '@/pages/members/profile';
@@ -161,6 +162,16 @@ function AppRoutes() {
           <ProtectedRoute allowedUserType="staff">
             <DashboardLayout>
               <BookingsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/emails"
+        element={
+          <ProtectedRoute allowedUserType="staff">
+            <DashboardLayout>
+              <EmailLogsPage />
             </DashboardLayout>
           </ProtectedRoute>
         }
