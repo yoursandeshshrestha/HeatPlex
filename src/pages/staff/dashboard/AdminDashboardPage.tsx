@@ -4,9 +4,10 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -128,7 +129,10 @@ export function AdminDashboardPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Heat Plex membership overview and key metrics</p>
+          <p className="text-muted-foreground">
+            Heat Plex membership overview and key metrics
+            {loading ? ' · Updating…' : ''}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <DateRangeSelector
@@ -170,6 +174,7 @@ export function AdminDashboardPage() {
 }
 
 function RecentMembersCard() {
+  const navigate = useNavigate();
   const [recentMembers, setRecentMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -203,9 +208,7 @@ function RecentMembersCard() {
           variant="ghost"
           size="sm"
           className="cursor-pointer"
-          onClick={() => {
-            window.location.href = '/staff/members';
-          }}
+          onClick={() => navigate('/staff/members')}
         >
           View All
           <ArrowRight className="ml-2 size-4" />

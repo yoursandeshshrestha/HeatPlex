@@ -27,6 +27,7 @@ function StatCard({ title, value, subtitle, change, icon, data }: StatCardProps)
         <div className="text-sm font-medium text-muted-foreground">{title}</div>
         <div className="text-muted-foreground">{icon}</div>
       </div>
+      <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
       <div className="mt-2 flex items-end justify-between">
         <div>
           <div className="text-2xl font-semibold tracking-tight">{value}</div>

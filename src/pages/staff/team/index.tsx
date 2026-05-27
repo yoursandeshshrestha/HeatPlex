@@ -88,22 +88,40 @@ export function StaffPage() {
 
   async function loadStats() {
     try {
-      const { data, error } = await supabase
-        .from('staff')
-        .select('role, deactivated_at');
+      const [total, active, admins, owners] = await Promise.all([
+        supabase.from('staff').select('*', { count: 'exact', head: true }),
+        supabase
+          .from('staff')
+          .select('*', { count: 'exact', head: true })
+          .is('deactivated_at', null),
+        supabase
+          .from('staff')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'admin'),
+        supabase
+          .from('staff')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'owner'),
+      ]);
 
-      if (error) throw error;
+      if (total.error) throw total.error;
+      if (active.error) throw active.error;
+      if (admins.error) throw admins.error;
+      if (owners.error) throw owners.error;
 
-      const allStaff = data || [];
       setStats({
-        total: allStaff.length,
-        active: allStaff.filter((s) => !s.deactivated_at).length,
-        admins: allStaff.filter((s) => s.role === 'admin').length,
-        owners: allStaff.filter((s) => s.role === 'owner').length,
+        total: total.count ?? 0,
+        active: active.count ?? 0,
+        admins: admins.count ?? 0,
+        owners: owners.count ?? 0,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
     }
+  }
+
+  async function handleStaffDeleted() {
+    await Promise.all([loadStaff(), loadStats()]);
   }
 
   if (initialLoading) {
@@ -124,7 +142,12 @@ export function StaffPage() {
       <StatsCards stats={stats} />
 
       {/* Table */}
-      <StaffTable staff={staff} totalCount={totalCount} loading={loading} />
+      <StaffTable
+        staff={staff}
+        totalCount={totalCount}
+        loading={loading}
+        onStaffDeleted={handleStaffDeleted}
+      />
     </div>
   );
 }

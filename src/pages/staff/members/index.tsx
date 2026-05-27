@@ -91,22 +91,40 @@ export function MembersPage() {
 
   async function loadStats() {
     try {
-      const { data, error } = await supabase
-        .from('members')
-        .select('status, plan');
+      const [total, active, paymentOverdue, annual] = await Promise.all([
+        supabase.from('members').select('*', { count: 'exact', head: true }),
+        supabase
+          .from('members')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'active'),
+        supabase
+          .from('members')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'payment_overdue'),
+        supabase
+          .from('members')
+          .select('*', { count: 'exact', head: true })
+          .eq('plan', 'annual'),
+      ]);
 
-      if (error) throw error;
+      if (total.error) throw total.error;
+      if (active.error) throw active.error;
+      if (paymentOverdue.error) throw paymentOverdue.error;
+      if (annual.error) throw annual.error;
 
-      const allMembers = data || [];
       setStats({
-        total: allMembers.length,
-        active: allMembers.filter((m) => m.status === 'active').length,
-        paymentOverdue: allMembers.filter((m) => m.status === 'payment_overdue').length,
-        annual: allMembers.filter((m) => m.plan === 'annual').length,
+        total: total.count ?? 0,
+        active: active.count ?? 0,
+        paymentOverdue: paymentOverdue.count ?? 0,
+        annual: annual.count ?? 0,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
     }
+  }
+
+  async function handleMemberDeleted() {
+    await Promise.all([loadMembers(), loadStats()]);
   }
 
   function handleMemberCreated(member: Member) {
@@ -145,7 +163,12 @@ export function MembersPage() {
       <StatsCards stats={stats} />
 
       {/* Table */}
-      <MembersTable members={members} totalCount={totalCount} loading={loading} />
+      <MembersTable
+        members={members}
+        totalCount={totalCount}
+        loading={loading}
+        onMemberDeleted={handleMemberDeleted}
+      />
     </div>
   );
 }

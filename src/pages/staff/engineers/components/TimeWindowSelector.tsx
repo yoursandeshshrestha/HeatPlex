@@ -3,7 +3,7 @@
  * Period selector for engineer leaderboard
  */
 
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from 'date-fns';
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks } from 'date-fns';
 import {
   Select,
   SelectContent,

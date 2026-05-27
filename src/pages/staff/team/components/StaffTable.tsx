@@ -41,9 +41,15 @@ interface StaffTableProps {
   staff: Staff[];
   totalCount: number;
   loading: boolean;
+  onStaffDeleted?: () => void | Promise<void>;
 }
 
-export function StaffTable({ staff, totalCount, loading }: StaffTableProps) {
+export function StaffTable({
+  staff,
+  totalCount,
+  loading,
+  onStaffDeleted,
+}: StaffTableProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState<Staff | null>(null);
@@ -54,17 +60,16 @@ export function StaffTable({ staff, totalCount, loading }: StaffTableProps) {
 
     setDeleting(true);
     try {
-      const { error } = await supabase
-        .from('staff')
-        .delete()
-        .eq('id', staffToDelete.id);
+      const { error } = await supabase.rpc('staff_delete_staff', {
+        target_staff_id: staffToDelete.id,
+      });
 
       if (error) throw error;
 
       toast.success('Staff member deleted successfully');
       setDeleteDialogOpen(false);
       setStaffToDelete(null);
-      window.location.reload();
+      await onStaffDeleted?.();
     } catch (error) {
       console.error('Error deleting staff:', error);
       toast.error('Failed to delete staff member');

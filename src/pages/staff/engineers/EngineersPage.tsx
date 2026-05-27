@@ -38,7 +38,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { LoadingScreen } from '@/components/ui/loading-screen';
 import { supabase } from '@/lib/supabase';
-import { getTopEngineers, type EngineerStats, type DateRangeFilter } from '@/lib/supabase/queries';
+import { getTopEngineers, type EngineerStats } from '@/lib/supabase/queries';
 import { type TimeWindow, getDateRangeFromWindow } from './components/TimeWindowSelector';
 import { StatsCards } from './components/StatsCards';
 

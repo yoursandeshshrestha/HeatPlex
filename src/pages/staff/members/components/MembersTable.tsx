@@ -42,9 +42,15 @@ interface MembersTableProps {
   members: Member[];
   totalCount: number;
   loading: boolean;
+  onMemberDeleted?: () => void | Promise<void>;
 }
 
-export function MembersTable({ members, totalCount, loading }: MembersTableProps) {
+export function MembersTable({
+  members,
+  totalCount,
+  loading,
+  onMemberDeleted,
+}: MembersTableProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [exporting, setExporting] = useState(false);
@@ -57,19 +63,16 @@ export function MembersTable({ members, totalCount, loading }: MembersTableProps
 
     setDeleting(true);
     try {
-      const { error } = await supabase
-        .from('members')
-        .delete()
-        .eq('id', memberToDelete.id);
+      const { error } = await supabase.rpc('staff_delete_member', {
+        target_member_id: memberToDelete.id,
+      });
 
       if (error) throw error;
 
       toast.success('Member deleted successfully');
       setDeleteDialogOpen(false);
       setMemberToDelete(null);
-
-      // Reload the page to refresh the list
-      window.location.reload();
+      await onMemberDeleted?.();
     } catch (error) {
       console.error('Error deleting member:', error);
       toast.error('Failed to delete member');

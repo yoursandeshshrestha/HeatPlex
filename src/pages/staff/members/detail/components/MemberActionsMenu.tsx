@@ -32,7 +32,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   UserCheck,
-  UserX,
   Calendar,
   CreditCard,
   Mail,
@@ -40,6 +39,7 @@ import {
   Ban,
 } from 'lucide-react';
 import type { Tables } from '@/lib/supabase';
+import type { Json } from '@/types/database.types';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { addDays, format } from 'date-fns';
@@ -59,6 +59,19 @@ export function MemberActionsMenu({ member, onUpdate }: MemberActionsMenuProps) 
   const [creditAmount, setCreditAmount] = useState('');
   const [creditReason, setCreditReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+
+  async function logAuditAction(actionType: string, details: Record<string, unknown>) {
+    const { error } = await supabase.rpc('append_audit_log', {
+      p_action_type: actionType,
+      p_target_type: 'member',
+      p_target_id: member.id,
+      p_summary: `Member action: ${actionType}`,
+      p_before: null,
+      p_after: details as unknown as Json,
+    });
+
+    if (error) throw error;
+  }
 
   async function handleStatusUpdate() {
     if (!statusToUpdate || statusToUpdate === member.status) {
@@ -181,32 +194,6 @@ export function MemberActionsMenu({ member, onUpdate }: MemberActionsMenuProps) 
       toast.error('Failed to apply credit');
     } finally {
       setActionLoading(false);
-    }
-  }
-
-  async function logAuditAction(actionType: string, details: Record<string, unknown>) {
-    try {
-      // Get current staff user from auth context
-      const { data: { user } } = await supabase.auth.getUser();
-
-      // TODO: Get staff_id from staff table matching user.id
-      // For now, we'll skip audit logging if we can't determine staff_id
-
-      if (!user) return;
-
-      // This would need proper staff_id lookup
-      // await supabase.from('audit_log').insert({
-      //   staff_id: staffId,
-      //   action_type: actionType,
-      //   target_type: 'member',
-      //   target_id: member.id,
-      //   summary: `${actionType} for ${member.first_name} ${member.last_name}`,
-      //   before: details.before ? JSON.stringify(details.before) : null,
-      //   after: details.after ? JSON.stringify(details.after) : null,
-      // });
-    } catch (error) {
-      console.error('Error logging audit action:', error);
-      // Don't throw - audit logging shouldn't block the main action
     }
   }
 
