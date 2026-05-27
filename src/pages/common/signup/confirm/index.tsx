@@ -20,6 +20,7 @@ import {
 } from '@/lib/signup/pending-signup';
 
 type ConfirmedMember = {
+  id?: string;
   email: string;
   firstName: string;
   plan: string;
@@ -39,16 +40,23 @@ export function SignupConfirmPage() {
   }, []);
 
   async function afterPaymentSuccess(member: ConfirmedMember) {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    // Try to auto-login the user after successful signup
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: member.email.toLowerCase(),
+        password: 'password123',
+      });
 
-    if (session?.user.email) {
-      await refreshSession();
-      navigate('/member?payment=complete', { replace: true });
-      return;
+      if (!signInError) {
+        await refreshSession();
+        navigate('/member?payment=complete', { replace: true });
+        return;
+      }
+    } catch (loginErr) {
+      console.error('Auto-login failed:', loginErr);
     }
 
+    // Fallback: if auto-login fails, send to done page
     const doneParams = new URLSearchParams({
       email: member.email,
       firstName: member.firstName || '',
@@ -59,19 +67,31 @@ export function SignupConfirmPage() {
 
   async function sendWelcomeEmail(member: ConfirmedMember) {
     try {
+      // Calculate renewal date (1 year from now)
+      const renewalDate = new Date();
+      renewalDate.setFullYear(renewalDate.getFullYear() + 1);
+      const formattedDate = renewalDate.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+
       await supabase.functions.invoke('send-email', {
         body: {
-          type: 'welcome',
+          templateKey: 'welcome-step-1',
           to: member.email,
+          memberId: member.id,
           data: {
             firstName: member.firstName || '',
             plan: member.plan || 'annual',
-            dashboardUrl: `${window.location.origin}/member`,
+            renewalDate: formattedDate,
+            accountUrl: `${window.location.origin}/member`,
           },
         },
       });
     } catch (emailErr) {
       console.error('Welcome email error:', emailErr);
+      // Don't block signup if email fails
     }
   }
 
@@ -100,6 +120,7 @@ export function SignupConfirmPage() {
 
     if (data?.success && data.member) {
       return {
+        id: data.member.id,
         email: data.member.email,
         firstName: data.member.firstName,
         plan: data.member.plan,
