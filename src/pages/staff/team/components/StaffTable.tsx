@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import type { Tables } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -20,8 +21,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Search, Plus, UserCog, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Search, Plus, UserCog, ChevronLeft, ChevronRight, X, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/date-utils';
+import { toast } from 'sonner';
 
 type Staff = Tables<'staff'>;
 
@@ -33,6 +45,33 @@ interface StaffTableProps {
 
 export function StaffTable({ staff, totalCount, loading }: StaffTableProps) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [staffToDelete, setStaffToDelete] = useState<Staff | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDeleteStaff() {
+    if (!staffToDelete) return;
+
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('staff')
+        .delete()
+        .eq('id', staffToDelete.id);
+
+      if (error) throw error;
+
+      toast.success('Staff member deleted successfully');
+      setDeleteDialogOpen(false);
+      setStaffToDelete(null);
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting staff:', error);
+      toast.error('Failed to delete staff member');
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '10');
@@ -218,9 +257,23 @@ export function StaffTable({ staff, totalCount, loading }: StaffTableProps) {
                     {formatDate(member.created_at)}
                   </TableCell>
                   <TableCell className="px-6 py-4 text-right">
-                    <Button variant="ghost" size="sm" className="h-8 cursor-pointer hover:bg-accent">
-                      <UserCog className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button variant="ghost" size="sm" className="h-8 cursor-pointer hover:bg-accent">
+                        <UserCog className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 cursor-pointer hover:bg-destructive/10 hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setStaffToDelete(member);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -282,6 +335,28 @@ export function StaffTable({ staff, totalCount, loading }: StaffTableProps) {
           </div>
         </div>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Staff Member?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{staffToDelete?.name}</strong> ({staffToDelete?.email})?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting} className="cursor-pointer">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteStaff}
+              disabled={deleting}
+              className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

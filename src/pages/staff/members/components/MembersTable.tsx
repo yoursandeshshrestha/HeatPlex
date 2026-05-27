@@ -21,7 +21,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Search, Download, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Search, Download, ChevronLeft, ChevronRight, X, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { formatDate } from '@/lib/date-utils';
 import { downloadCsv, toCsv } from '@/lib/csv-utils';
 import { toast } from 'sonner';
@@ -38,6 +48,35 @@ export function MembersTable({ members, totalCount, loading }: MembersTableProps
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [exporting, setExporting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDeleteMember() {
+    if (!memberToDelete) return;
+
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('members')
+        .delete()
+        .eq('id', memberToDelete.id);
+
+      if (error) throw error;
+
+      toast.success('Member deleted successfully');
+      setDeleteDialogOpen(false);
+      setMemberToDelete(null);
+
+      // Reload the page to refresh the list
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      toast.error('Failed to delete member');
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '10');
@@ -296,17 +335,31 @@ export function MembersTable({ members, totalCount, loading }: MembersTableProps
                     £{((member.savings_total_pence || 0) / 100).toFixed(2)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 cursor-pointer hover:bg-accent"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/staff/members/${member.id}`);
-                      }}
-                    >
-                      View
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 cursor-pointer hover:bg-accent"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/staff/members/${member.id}`);
+                        }}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 cursor-pointer hover:bg-destructive/10 hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMemberToDelete(member);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -368,6 +421,28 @@ export function MembersTable({ members, totalCount, loading }: MembersTableProps
           </div>
         </div>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Member?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{memberToDelete?.first_name} {memberToDelete?.last_name}</strong> ({memberToDelete?.email})?
+              This action cannot be undone and will remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting} className="cursor-pointer">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMember}
+              disabled={deleting}
+              className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

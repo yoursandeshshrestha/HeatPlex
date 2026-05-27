@@ -23,10 +23,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Copy, Check, CheckCircle2, AlertTriangle, Minus, Download } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Copy, Check, CheckCircle2, AlertTriangle, Minus, Download, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { LoadingScreen } from '@/components/ui/loading-screen';
+import { supabase } from '@/lib/supabase';
 import { getTopEngineers, type EngineerStats, type DateRangeFilter } from '@/lib/supabase/queries';
 import { type TimeWindow, getDateRangeFromWindow } from './components/TimeWindowSelector';
 import { StatsCards } from './components/StatsCards';
@@ -92,8 +103,35 @@ export function EngineersPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [engineerToDelete, setEngineerToDelete] = useState<EngineerStats | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const timeWindow = (searchParams.get('period') || 'this_week') as TimeWindow;
+
+  async function handleDeleteEngineer() {
+    if (!engineerToDelete) return;
+
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('engineers')
+        .delete()
+        .eq('id', engineerToDelete.id);
+
+      if (error) throw error;
+
+      toast.success('Engineer deleted successfully');
+      setDeleteDialogOpen(false);
+      setEngineerToDelete(null);
+      loadEngineers();
+    } catch (error) {
+      console.error('Error deleting engineer:', error);
+      toast.error('Failed to delete engineer');
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     loadEngineers();
@@ -252,12 +290,13 @@ export function EngineersPage() {
                 <TableHead className="text-right">Conv. Rate</TableHead>
                 <TableHead className="text-right">Commission</TableHead>
                 <TableHead className="text-right">Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className={loading ? 'opacity-50' : ''}>
               {engineers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-32 text-center text-sm">
+                  <TableCell colSpan={10} className="h-32 text-center text-sm">
                     No engineer data for this period
                   </TableCell>
                 </TableRow>
@@ -313,6 +352,20 @@ export function EngineersPage() {
                           {getStatusBadge(engineer.conversionRate)}
                         </div>
                       </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 cursor-pointer hover:bg-destructive/10 hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEngineerToDelete(engineer);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })
@@ -321,6 +374,28 @@ export function EngineersPage() {
           </Table>
         </div>
       </Card>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Engineer?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{engineerToDelete?.name}</strong>?
+              This action cannot be undone and will remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting} className="cursor-pointer">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteEngineer}
+              disabled={deleting}
+              className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
