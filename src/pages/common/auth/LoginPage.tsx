@@ -13,6 +13,19 @@ import { LoadingScreen } from '@/components/ui/loading-screen';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
+const DEV_ACCOUNTS = {
+  staff: [
+    { email: 'joe@heatplex.com', label: 'Joe (Owner)', role: 'Owner' },
+    { email: 'miles@heatplex.com', label: 'Miles (Admin)', role: 'Admin' },
+    { email: 'jackie@heatplex.com', label: 'Jackie (Staff)', role: 'Staff' },
+  ],
+  members: [
+    { email: 'alice@heatplex.test', label: 'Alice (Member)', role: 'Member' },
+    { email: 'bob@heatplex.test', label: 'Bob (Member)', role: 'Member' },
+    { email: 'charlie@heatplex.test', label: 'Charlie (Member)', role: 'Member' },
+  ],
+};
+
 export function LoginPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -20,6 +33,7 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isDev = import.meta.env.DEV;
 
   // Redirect if already logged in
   useEffect(() => {
@@ -27,6 +41,31 @@ export function LoginPage() {
       navigate('/account', { replace: true });
     }
   }, [user, authLoading, navigate]);
+
+  async function handleDevLogin(devEmail: string) {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: devEmail.toLowerCase(),
+        password: 'password123',
+      });
+
+      if (signInError) {
+        setError('Dev login failed. Check that the user exists in the database.');
+        setLoading(false);
+        return;
+      }
+
+      // Success - redirect to auto-redirect route
+      window.location.href = '/account';
+    } catch (err) {
+      console.error(err);
+      setError('Something went wrong. Please try again.');
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -166,10 +205,10 @@ export function LoginPage() {
                 {loading ? (
                   <>
                     <Spinner className="mr-2 h-4 w-4" />
-                    Sending...
+                    Signing in...
                   </>
                 ) : (
-                  'Send login link'
+                  'Sign in'
                 )}
               </Button>
             </form>
@@ -188,6 +227,38 @@ export function LoginPage() {
                 </Button>
               </div>
             </div>
+
+            {isDev && (
+              <div className="border-t pt-4 space-y-3">
+                <div className="text-xs font-medium text-muted-foreground text-center">DEV LOGIN</div>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {DEV_ACCOUNTS.staff.map((account) => (
+                    <Button
+                      key={account.email}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDevLogin(account.email)}
+                      disabled={loading}
+                      className="cursor-pointer"
+                    >
+                      {account.label}
+                    </Button>
+                  ))}
+                  {DEV_ACCOUNTS.members.map((account) => (
+                    <Button
+                      key={account.email}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDevLogin(account.email)}
+                      disabled={loading}
+                      className="cursor-pointer"
+                    >
+                      {account.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-center gap-4 text-sm text-muted-foreground">
               <a href="https://heatplex.com/membership" className="hover:underline cursor-pointer">
