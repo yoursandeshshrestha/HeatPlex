@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -58,8 +58,7 @@ export function LoginPage() {
         return;
       }
 
-      // Success - redirect to auto-redirect route
-      window.location.href = '/account';
+      navigate('/account', { replace: true });
     } catch (err) {
       console.error(err);
       setError('Something went wrong. Please try again.');
@@ -85,8 +84,7 @@ export function LoginPage() {
         return;
       }
 
-      // Success - redirect to auto-redirect route
-      window.location.href = '/account';
+      navigate('/account', { replace: true });
     } catch (err) {
       console.error(err);
       setError('Something went wrong. Please try again.');
@@ -218,12 +216,8 @@ export function LoginPage() {
                 <p className="text-sm text-muted-foreground">
                   <strong>New here?</strong> Heat Plex Membership covers your annual service + 20% off all works.
                 </p>
-                <Button
-                  variant="outline"
-                  className="w-full cursor-pointer"
-                  onClick={() => (window.location.href = '/join/plan')}
-                >
-                  Join now from £199/year →
+                <Button variant="outline" className="w-full cursor-pointer" asChild>
+                  <Link to="/join/plan">Join now from £199/year →</Link>
                 </Button>
               </div>
             </div>

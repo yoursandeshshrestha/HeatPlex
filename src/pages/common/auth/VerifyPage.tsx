@@ -38,18 +38,23 @@ export function VerifyPage() {
         return;
       }
 
-      // Check if user has a member profile
-      const { data: member } = await supabase
-        .from('members')
-        .select('id, email')
-        .eq('email', session.user.email)
-        .single();
-
-      if (!member) {
-        // Sign out if not a member
+      const email = session.user.email;
+      if (!email) {
         await supabase.auth.signOut();
         setStatus('error');
-        setError('No member account found for this email');
+        setError('No email on this account');
+        return;
+      }
+
+      const [{ data: member }, { data: staff }] = await Promise.all([
+        supabase.from('members').select('id').eq('email', email).maybeSingle(),
+        supabase.from('staff').select('id').eq('email', email).maybeSingle(),
+      ]);
+
+      if (!member && !staff) {
+        await supabase.auth.signOut();
+        setStatus('error');
+        setError('No account found for this email');
         return;
       }
 

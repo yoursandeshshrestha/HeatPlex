@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { sidebarConfig } from '@/config/sidebar'
 import {
@@ -16,7 +15,6 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
 
 interface SidebarProps {
   isCollapsed?: boolean
@@ -30,12 +28,7 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
   async function handleSignOut() {
     try {
       await signOut()
-
-      // Verify session is cleared before redirecting
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        window.location.href = '/'
-      }
+      navigate('/', { replace: true })
     } catch (error) {
       console.error('Sign out error:', error)
     }

@@ -3,12 +3,13 @@
  * Shown after /join/confirm has verified payment and activated the member.
  */
 
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SignupLayout } from '../components/SignupLayout';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Mail, Calendar, FileText } from 'lucide-react';
 
 export function SignupDonePage() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const plan = searchParams.get('plan') || 'annual';
   const firstName = searchParams.get('firstName') || 'there';
@@ -26,7 +27,7 @@ export function SignupDonePage() {
   });
 
   function handleLoginNow() {
-    window.location.href = '/';
+    navigate('/', { replace: true });
   }
 
   return (

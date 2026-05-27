@@ -19,9 +19,10 @@ type Member = Tables<'members'>;
 
 interface ProfileTabProps {
   member: Member;
+  onUpdated?: () => void | Promise<void>;
 }
 
-export function ProfileTab({ member }: ProfileTabProps) {
+export function ProfileTab({ member, onUpdated }: ProfileTabProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -77,7 +78,7 @@ export function ProfileTab({ member }: ProfileTabProps) {
       setSuccess(true);
       setIsEditing(false);
       setTimeout(() => setSuccess(false), 3000);
-      window.location.reload();
+      await onUpdated?.();
     } catch (err) {
       console.error('Update error:', err);
       setError('Failed to update profile. Please try again.');

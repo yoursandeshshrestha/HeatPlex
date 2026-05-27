@@ -3,11 +3,12 @@
  * Edit personal information and preferences
  */
 
-import { useMember } from '@/contexts/AuthContext';
+import { useAuth, useMember } from '@/contexts/AuthContext';
 import { ProfileTab } from '../components/ProfileTab';
 
 export function MemberProfilePage() {
   const member = useMember();
+  const { refreshSession } = useAuth();
 
   if (!member) return null;
 
@@ -20,7 +21,7 @@ export function MemberProfilePage() {
         </p>
       </div>
 
-      <ProfileTab member={member} />
+      <ProfileTab member={member} onUpdated={refreshSession} />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Maximize2, Minimize2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import type { Tables } from '@/lib/supabase'
 import { LogoutButton } from '@/components/auth/LogoutButton'
 
 interface BreadcrumbItem {
@@ -28,13 +29,14 @@ export function Header({ breadcrumbs = [{ label: 'Dashboard' }], onMenuClick }: 
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
-  const userName = user
-    ? 'email' in user
-      ? user.email
-      : 'name' in user
-      ? user.name
-      : 'User'
-    : 'User'
+  const userName = !user
+    ? 'User'
+    : userType === 'staff'
+      ? (user as Tables<'staff'>).name
+      : (() => {
+          const member = user as Tables<'members'>;
+          return `${member.first_name} ${member.last_name}`.trim() || member.email;
+        })()
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {

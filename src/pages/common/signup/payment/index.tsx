@@ -46,6 +46,13 @@ export function SignupPaymentPage() {
             lastName,
             plan,
             redirectUri,
+            phone: searchParams.get('phone') || '',
+            addressLine1: searchParams.get('addressLine1') || '',
+            addressLine2: searchParams.get('addressLine2') || null,
+            town: searchParams.get('town') || '',
+            postcode: searchParams.get('postcode') || '',
+            promoCode: searchParams.get('promoCode') || null,
+            marketingOptIn,
           },
         }
       );
@@ -56,15 +63,20 @@ export function SignupPaymentPage() {
         return;
       }
 
-      const { customerId, billingRequestId, authorizationUrl } = signupData ?? {};
+      const { memberId, billingRequestId, authorizationUrl } = signupData ?? {};
       if (!authorizationUrl) {
         setError(signupData?.error || 'Failed to create payment request');
         setLoading(false);
         return;
       }
+      if (!memberId) {
+        setError(signupData?.error || 'Failed to create membership');
+        setLoading(false);
+        return;
+      }
 
       // 2. Create Supabase auth user (for login)
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { error: authError } = await supabase.auth.signUp({
         email: email.toLowerCase(),
         password: 'password123', // Dev mode password
         options: {
@@ -82,47 +94,15 @@ export function SignupPaymentPage() {
         return;
       }
 
-      // 3. Create member record with pending status
-      const { data: member, error: memberError } = await supabase
-        .from('members')
-        .insert({
-          first_name: firstName,
-          last_name: lastName,
-          email: email.toLowerCase(),
-          phone: searchParams.get('phone') || '',
-          address_line_1: searchParams.get('addressLine1') || '',
-          address_line_2: searchParams.get('addressLine2') || null,
-          address_town: searchParams.get('town') || '',
-          address_postcode: searchParams.get('postcode') || '',
-          plan,
-          promo_code: searchParams.get('promoCode') || null,
-          marketing_email_opt_in: marketingOptIn,
-          marketing_consent_at: marketingOptIn ? new Date().toISOString() : null,
-          status: 'pending',
-          terms_accepted_at: new Date().toISOString(),
-          gocardless_customer_id: customerId,
-          gocardless_billing_request_id: billingRequestId,
-          started_at: new Date().toISOString(),
-          renewal_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        })
-        .select()
-        .single();
-
-      if (memberError) {
-        setError(`Failed to create member record: ${memberError.message}`);
-        setLoading(false);
-        return;
-      }
-
       savePendingSignup({
-        memberId: member.id,
+        memberId,
         email: email.toLowerCase(),
         firstName,
         plan,
         billingRequestId,
       });
 
-      // 4. Redirect to GoCardless authorization page
+      // 3. Redirect to GoCardless authorization page
       window.location.href = authorizationUrl;
     } catch (err) {
       console.error('Payment error:', err);
