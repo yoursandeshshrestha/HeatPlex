@@ -33,7 +33,6 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const isDev = import.meta.env.DEV;
 
   // Redirect if already logged in
   useEffect(() => {
@@ -222,37 +221,35 @@ export function LoginPage() {
               </div>
             </div>
 
-            {isDev && (
-              <div className="border-t pt-4 space-y-3">
-                <div className="text-xs font-medium text-muted-foreground text-center">DEV LOGIN</div>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {DEV_ACCOUNTS.staff.map((account) => (
-                    <Button
-                      key={account.email}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDevLogin(account.email)}
-                      disabled={loading}
-                      className="cursor-pointer"
-                    >
-                      {account.label}
-                    </Button>
-                  ))}
-                  {DEV_ACCOUNTS.members.map((account) => (
-                    <Button
-                      key={account.email}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDevLogin(account.email)}
-                      disabled={loading}
-                      className="cursor-pointer"
-                    >
-                      {account.label}
-                    </Button>
-                  ))}
-                </div>
+            <div className="border-t pt-4 space-y-3">
+              <div className="text-xs font-medium text-muted-foreground text-center">DEV LOGIN</div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {DEV_ACCOUNTS.staff.map((account) => (
+                  <Button
+                    key={account.email}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDevLogin(account.email)}
+                    disabled={loading}
+                    className="cursor-pointer"
+                  >
+                    {account.label}
+                  </Button>
+                ))}
+                {DEV_ACCOUNTS.members.map((account) => (
+                  <Button
+                    key={account.email}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDevLogin(account.email)}
+                    disabled={loading}
+                    className="cursor-pointer"
+                  >
+                    {account.label}
+                  </Button>
+                ))}
               </div>
-            )}
+            </div>
 
             <div className="flex justify-center gap-4 text-sm text-muted-foreground">
               <a href="https://heatplex.com/membership" className="hover:underline cursor-pointer">
