@@ -130,7 +130,7 @@ export function MembersPage() {
   function handleMemberCreated(member: Member) {
     loadMembers();
     loadStats();
-    navigate(`/staff/members/${member.id}`);
+    navigate(`/dashboard/members/${member.id}`);
   }
 
   if (initialLoading) {

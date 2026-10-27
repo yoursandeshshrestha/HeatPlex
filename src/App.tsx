@@ -8,7 +8,11 @@ import { MembersPage } from '@/pages/staff/members';
 import { MemberDetailPage } from '@/pages/staff/members/detail';
 import { EngineersPage } from '@/pages/staff/engineers';
 import { BookingsPage } from '@/pages/staff/bookings';
+import { CommissionsPage } from '@/pages/staff/commissions';
 import { EmailLogsPage } from '@/pages/staff/emails';
+import { AlertsPage } from '@/pages/staff/alerts';
+import { AuditLogPage } from '@/pages/staff/audit';
+import { SettingsPage } from '@/pages/staff/settings';
 import { StaffPage } from '@/pages/staff/team';
 import { MemberDashboardPage } from '@/pages/members/dashboard';
 import { MemberProfilePage } from '@/pages/members/profile';
@@ -44,7 +48,7 @@ function ProtectedRoute({ children, allowedUserType }: { children: React.ReactNo
   // Check if user type matches required type
   if (allowedUserType && userType !== allowedUserType) {
     // Redirect to appropriate dashboard
-    return <Navigate to={userType === 'staff' ? '/staff' : '/member'} replace />;
+    return <Navigate to={userType === 'staff' ? '/dashboard' : '/member'} replace />;
   }
 
   return <>{children}</>;
@@ -81,7 +85,7 @@ function DashboardRedirect() {
   }
 
   if (userType === 'staff') {
-    return <Navigate to="/staff" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   if (userType === 'member') {
@@ -129,16 +133,23 @@ function AppRoutes() {
         <Route path="cancel" element={<CancelPage />} />
       </Route>
 
-      {/* Staff routes — single auth gate + layout */}
-      <Route path="/staff" element={<StaffLayout />}>
+      {/* Dashboard routes for staff — single auth gate + layout */}
+      <Route path="/dashboard" element={<StaffLayout />}>
         <Route index element={<StaffDashboardPage />} />
         <Route path="members" element={<MembersPage />} />
         <Route path="members/:id" element={<MemberDetailPage />} />
         <Route path="engineers" element={<EngineersPage />} />
         <Route path="bookings" element={<BookingsPage />} />
+        <Route path="commissions" element={<CommissionsPage />} />
         <Route path="emails" element={<EmailLogsPage />} />
         <Route path="team" element={<StaffPage />} />
+        <Route path="alerts" element={<AlertsPage />} />
+        <Route path="audit" element={<AuditLogPage />} />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
+
+      {/* Legacy staff URLs */}
+      <Route path="/staff/*" element={<Navigate to="/dashboard" replace />} />
 
       {/* Catch-all redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -172,11 +172,13 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
       </div>
 
       {/* Footer - User Profile */}
-      <div className="mt-auto shrink-0 border-t border-border bg-sidebar-accent/30">
+      <div className="mt-auto shrink-0 border-t border-sidebar-border p-2">
         <DropdownMenu>
-          <DropdownMenuTrigger className={`w-full cursor-pointer p-3 transition-colors hover:bg-sidebar-accent/50 focus:outline-none ${
+          <DropdownMenuTrigger
+            className={`w-full cursor-pointer rounded-md p-2 transition-colors hover:bg-sidebar-accent/50 focus:outline-none data-[state=open]:bg-sidebar-accent/50 ${
             isCollapsed ? 'flex justify-center' : ''
-          }`}>
+          }`}
+          >
             <div className={`flex items-center ${isCollapsed ? '' : 'gap-3'}`}>
               <Avatar className={isCollapsed ? 'h-8 w-8' : 'h-10 w-10'}>
                 <AvatarImage src="/developer.jpeg" alt="User" />
@@ -251,7 +253,7 @@ export function Sidebar({ isCollapsed = false }: SidebarProps) {
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
+            <DropdownMenuItem variant="destructive" onClick={handleSignOut} className="cursor-pointer">
               <svg
                 className="mr-2 size-4"
                 fill="none"

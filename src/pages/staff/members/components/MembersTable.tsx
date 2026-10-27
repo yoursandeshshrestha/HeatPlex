@@ -311,7 +311,7 @@ export function MembersTable({
                 <TableRow
                   key={member.id}
                   className="cursor-pointer hover:bg-accent/50"
-                  onClick={() => navigate(`/staff/members/${member.id}`)}
+                  onClick={() => navigate(`/dashboard/members/${member.id}`)}
                 >
                   <TableCell className="font-medium">
                     {member.first_name} {member.last_name}
@@ -345,7 +345,7 @@ export function MembersTable({
                         className="h-8 cursor-pointer hover:bg-accent"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/staff/members/${member.id}`);
+                          navigate(`/dashboard/members/${member.id}`);
                         }}
                       >
                         View

@@ -4,12 +4,12 @@
  */
 
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox';
 
 type DateRangePreset = 'this_week' | 'last_week' | 'this_month' | 'last_month' | 'custom';
 
@@ -27,17 +27,17 @@ const PRESET_OPTIONS: { value: DateRangePreset; label: string }[] = [
 
 export function DateRangeSelector({ preset, onPresetChange }: DateRangeSelectorProps) {
   return (
-    <Select value={preset} onValueChange={onPresetChange}>
-      <SelectTrigger className="w-[180px] cursor-pointer">
-        <SelectValue placeholder="Select period" />
-      </SelectTrigger>
-      <SelectContent>
+    <Combobox value={preset} onValueChange={(value) => value && onPresetChange(value as DateRangePreset)}>
+      <ComboboxInput placeholder="Select period" className="h-9 w-[180px] cursor-pointer" />
+      <ComboboxContent>
+        <ComboboxList>
         {PRESET_OPTIONS.map((option) => (
-          <SelectItem key={option.value} value={option.value} className="cursor-pointer">
+          <ComboboxItem key={option.value} value={option.value} className="cursor-pointer">
             {option.label}
-          </SelectItem>
+          </ComboboxItem>
         ))}
-      </SelectContent>
-    </Select>
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
   );
 }

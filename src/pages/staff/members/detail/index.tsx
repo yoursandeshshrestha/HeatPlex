@@ -62,7 +62,7 @@ export function MemberDetailPage() {
     } catch (error) {
       console.error('Error loading member:', error);
       toast.error('Failed to load member details');
-      navigate('/staff/members');
+      navigate('/dashboard/members');
     } finally {
       setLoading(false);
     }
@@ -99,7 +99,7 @@ export function MemberDetailPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             This member may have been removed or the link is incorrect.
           </p>
-          <Button onClick={() => navigate('/staff/members')} className="mt-4 cursor-pointer">
+          <Button onClick={() => navigate('/dashboard/members')} className="mt-4 cursor-pointer">
             Back to Members
           </Button>
         </div>
@@ -114,7 +114,7 @@ export function MemberDetailPage() {
     <div className="space-y-6 p-6">
       <button
         type="button"
-        onClick={() => navigate('/staff/members')}
+        onClick={() => navigate('/dashboard/members')}
         className="mb-6 inline-flex cursor-pointer items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-3.5" />

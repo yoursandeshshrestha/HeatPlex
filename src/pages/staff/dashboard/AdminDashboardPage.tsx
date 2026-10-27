@@ -208,7 +208,7 @@ function RecentMembersCard() {
           variant="ghost"
           size="sm"
           className="cursor-pointer"
-          onClick={() => navigate('/staff/members')}
+          onClick={() => navigate('/dashboard/members')}
         >
           View All
           <ArrowRight className="ml-2 size-4" />

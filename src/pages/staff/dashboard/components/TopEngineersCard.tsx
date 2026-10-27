@@ -66,7 +66,7 @@ export function TopEngineersCard({ engineers }: TopEngineersCardProps) {
           variant="ghost"
           size="sm"
           className="cursor-pointer"
-          onClick={() => navigate('/staff/engineers')}
+          onClick={() => navigate('/dashboard/engineers')}
         >
           View All
           <ArrowRight className="ml-2 size-4" />

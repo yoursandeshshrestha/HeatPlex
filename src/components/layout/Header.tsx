@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -12,7 +13,6 @@ import {
 import { Maximize2, Minimize2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Tables } from '@/lib/supabase'
-import { LogoutButton } from '@/components/auth/LogoutButton'
 
 interface BreadcrumbItem {
   label: string
@@ -25,7 +25,8 @@ interface HeaderProps {
 }
 
 export function Header({ breadcrumbs = [{ label: 'Dashboard' }], onMenuClick }: HeaderProps) {
-  const { user, userType } = useAuth()
+  const navigate = useNavigate()
+  const { user, userType, signOut } = useAuth()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -37,6 +38,15 @@ export function Header({ breadcrumbs = [{ label: 'Dashboard' }], onMenuClick }: 
           const member = user as Tables<'members'>;
           return `${member.first_name} ${member.last_name}`.trim() || member.email;
         })()
+
+  async function handleSignOut() {
+    try {
+      await signOut()
+      navigate('/', { replace: true })
+    } catch (error) {
+      console.error('Sign out error:', error)
+    }
+  }
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -238,8 +248,21 @@ export function Header({ breadcrumbs = [{ label: 'Dashboard' }], onMenuClick }: 
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" asChild>
-              <LogoutButton variant="ghost" size="sm" className="w-full justify-start px-2" />
+            <DropdownMenuItem variant="destructive" onClick={handleSignOut} className="cursor-pointer">
+              <svg
+                className="mr-2 size-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+              <span>Sign out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
